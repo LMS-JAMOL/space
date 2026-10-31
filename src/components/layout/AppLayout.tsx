@@ -4,8 +4,8 @@ import {
   Newspaper, ShoppingBag, Swords, Trophy, Wallet, X, Zap,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { USE_MOCKS } from '../../services/apiClient'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { ApiError, TOKEN_KEY, USE_MOCKS } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 import { notificationService } from '../../services/notificationService'
 import { fmtDateTime, fmtNum } from '../../utils/format'
@@ -137,8 +137,18 @@ function ProfileMenu() {
 export function AppLayout() {
   const [drawer, setDrawer] = useState(false)
   const { pathname } = useLocation()
-  const { data: me } = useMe()
+  const navigate = useNavigate()
+  const { data: me, error } = useMe()
   const dark = pathname.startsWith('/battle')
+
+  // Expired or revoked session: drop the dead token and send the user to the
+  // login screen instead of rendering the shell around a failing profile.
+  useEffect(() => {
+    if (error instanceof ApiError && error.status === 401) {
+      localStorage.removeItem(TOKEN_KEY)
+      navigate('/login', { replace: true })
+    }
+  }, [error, navigate])
 
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 

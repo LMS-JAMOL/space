@@ -5,7 +5,7 @@ export const USE_MOCKS = import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS =
 
 // TODO(backend): the auth scheme is not confirmed. Assumes a bearer access token
 // stored by the existing login flow + cookie-based refresh at POST /auth/refresh.
-const TOKEN_KEY = 'access_token'
+export const TOKEN_KEY = 'access_token'
 
 export class ApiError extends Error {
   status: number

@@ -6,6 +6,7 @@ import { Button, Card, EmptyState, ErrorState, Field, PageHeader, Skeleton, Tabl
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { errorMessage } from '../../services/apiClient'
 import { paymentService } from '../../services/paymentService'
+import type { PaymentInfo } from '../../types'
 import { fmtDateTime, fmtMoney, fmtNum, newIdempotencyKey } from '../../utils/format'
 
 export default function PaymentPage() {
@@ -20,7 +21,7 @@ export default function PaymentPage() {
       {paymentId && <PaymentStatus id={paymentId} onClose={() => setParams({})} />}
       <div className="grid gap-5 lg:grid-cols-5">
         <Card className="p-6 lg:col-span-2">
-          {info.isLoading ? <Skeleton className="h-64" /> : info.error ? <ErrorState error={info.error} onRetry={info.refetch} /> : <Checkout />}
+          {info.isLoading ? <Skeleton className="h-64" /> : info.error ? <ErrorState error={info.error} onRetry={info.refetch} /> : info.data && <Checkout data={info.data} />}
         </Card>
         <Card className="lg:col-span-3">
           <div className="border-b border-line px-5 py-4 font-bold">To'lovlar tarixi</div>
@@ -43,8 +44,13 @@ export default function PaymentPage() {
     </>
   )
 
-  function Checkout() {
-    const d = info.data!
+}
+
+// Providers are returned as API codes (`click`, `payme`, `card`); only the
+// label is user-facing.
+const PROVIDER_LABELS: Record<string, string> = { click: 'Click', payme: 'Payme', card: 'Karta' }
+
+function Checkout({ data: d }: { data: PaymentInfo }) {
     const qc = useQueryClient()
     const [amount, setAmount] = useState(String(d.amountDue ?? ''))
     const [provider, setProvider] = useState(d.providers[0] ?? '')
@@ -82,7 +88,7 @@ export default function PaymentPage() {
           <p className="mb-1.5 text-sm font-semibold">To'lov tizimi</p>
           <div className="grid grid-cols-3 gap-2">
             {d.providers.map((p) => (
-              <button type="button" key={p} onClick={() => setProvider(p)} className={cn('h-12 rounded-xl border-2 text-sm font-bold transition', provider === p ? 'border-mars-500 bg-mars-50 text-mars-600' : 'border-line text-muted')}>{p}</button>
+              <button type="button" key={p} onClick={() => setProvider(p)} className={cn('h-12 rounded-xl border-2 text-sm font-bold transition', provider === p ? 'border-mars-500 bg-mars-50 text-mars-600' : 'border-line text-muted')}>{PROVIDER_LABELS[p] ?? p}</button>
             ))}
           </div>
         </div>
@@ -91,7 +97,6 @@ export default function PaymentPage() {
         <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="size-4 shrink-0 text-emerald-500" />Karta ma'lumotlari faqat to'lov tizimining xavfsiz sahifasida kiritiladi. Bu sayt karta ma'lumotlarini saqlamaydi.</p>
       </form>
     )
-  }
 }
 
 function PaymentStatus({ id, onClose }: { id: string; onClose: () => void }) {

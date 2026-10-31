@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Compass } from 'lucide-react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
+import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
 import { ApiError } from '../services/apiClient'
 import { AlgoPage, EdversePage } from '../pages/algo/AlgoEdversePages'
@@ -30,6 +31,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Auth screen sits outside the shell: the shell renders the profile. */}
+          <Route path="/login" element={<LoginPage />} />
+
           <Route element={<AppLayout />}>
             <Route index element={<Navigate to="/main-page" replace />} />
             <Route path="main-page" element={<DashboardPage />} />

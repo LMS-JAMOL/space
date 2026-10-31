@@ -7,8 +7,20 @@ import { battleService } from '../../services/battleService'
 import type { BattleMatch } from '../../types'
 import { fmtDateTime } from '../../utils/format'
 
-const LANGS = ['JavaScript', 'Python'] as const
-const DIFFS = ['Oson', "O'rta", 'Qiyin'] as const
+// The API validates `language` / `difficulty` against fixed enums, so the
+// selectable values must be the enum codes and only the labels are localized.
+const LANGS = [
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'python', label: 'Python' },
+] as const
+const DIFFS = [
+  { value: 'easy', label: 'Oson' },
+  { value: 'medium', label: "O'rta" },
+  { value: 'hard', label: 'Qiyin' },
+] as const
+
+const labelOf = (options: readonly { value: string; label: string }[], value?: string | null) =>
+  options.find((o) => o.value === value)?.label ?? value ?? '—'
 const MATCH_KEY = 'battle_active_match'
 
 function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
@@ -17,8 +29,8 @@ function Panel({ className, children }: { className?: string; children: React.Re
 
 export default function BattlePage() {
   const qc = useQueryClient()
-  const [lang, setLang] = useState<string>(LANGS[0])
-  const [diff, setDiff] = useState<string>(DIFFS[1])
+  const [lang, setLang] = useState<string>(LANGS[0].value)
+  const [diff, setDiff] = useState<string>(DIFFS[1].value)
   const [matchId, setMatchId] = useState<string | null>(() => sessionStorage.getItem(MATCH_KEY))
 
   const profile = useQuery({ queryKey: ['battle', 'profile'], queryFn: battleService.profile })
@@ -83,8 +95,8 @@ export default function BattlePage() {
           {!active ? (
             <>
               <div className="mb-4 flex flex-wrap justify-center gap-3">
-                <Chips dark value={lang} onChange={setLang} options={LANGS.map((l) => ({ value: l, label: l }))} />
-                <Chips dark value={diff} onChange={setDiff} options={DIFFS.map((d) => ({ value: d, label: d }))} />
+                <Chips dark value={lang} onChange={setLang} options={[...LANGS]} />
+                <Chips dark value={diff} onChange={setDiff} options={[...DIFFS]} />
               </div>
               <button onClick={() => create.mutate(undefined)} disabled={create.isPending}
                 className="group my-4 grid size-40 place-items-center rounded-full bg-gradient-to-br from-mars-400 to-mars-600 shadow-[0_0_60px_-10px] shadow-mars-500 transition hover:scale-105 active:scale-95 disabled:opacity-60">
@@ -102,7 +114,7 @@ export default function BattlePage() {
                 <Search className="size-10 text-mars-400" />
               </div>
               <p className="text-lg font-bold">Raqib qidirilmoqda...</p>
-              <p className="text-sm text-navy-300">{m.language} · {m.difficulty}</p>
+              <p className="text-sm text-navy-300">{labelOf(LANGS, m.language)} · {labelOf(DIFFS, m.difficulty)}</p>
               <Button variant="dark" className="mt-5" loading={cancel.isPending} onClick={() => cancel.mutate()}><X className="size-4" />Bekor qilish</Button>
               {cancel.error && <p className="mt-2 text-sm text-red-400">{errorMessage(cancel.error)}</p>}
             </>
