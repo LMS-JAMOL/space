@@ -2,8 +2,11 @@ import type { Student } from '../types'
 import { api } from './apiClient'
 
 export interface LoginCredentials {
-  /** Phone (`+998901112233`) or email — the backend accepts either. */
+  /** 7-digit panel ID issued by the admin panel. */
+  loginId?: string
+  /** Legacy identifier, still accepted by the backend. */
   phone?: string
+  /** Legacy identifier, still accepted by the backend. */
   email?: string
   password: string
 }

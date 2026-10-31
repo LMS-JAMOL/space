@@ -7,8 +7,8 @@ import { authService } from '../../services/authService'
 
 const hasToken = () => Boolean(localStorage.getItem(TOKEN_KEY))
 
-/** `+998 90 123 45 67` → `+998901112233` (the format the API validates). */
-const normalizePhone = (value: string) => value.replace(/[\s()-]/g, '')
+/** Only digits are accepted; the ID is exactly 7 characters. */
+const normalizeLoginId = (value: string) => value.replace(/\D/g, '').slice(0, 7)
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
@@ -21,30 +21,24 @@ const EyeOffIcon = () => (
 /**
  * Mars Space kirish sahifasi — `POST /api/v1/auth/login`.
  *
- * Ko'rinishi xodimlar panellari (mars-admin, mars-ceo, …) bilan BIR XIL:
- * `auth-screen` + Mars sayyorasi + `auth-card` + MARS wordmark + sariq
- * «Kirish» tugmasi. Farq — faqat sarlavha va rol yorlig'i.
+ * Talaba admin panelda yaratilganda 7 xonali ID va 5 xonali parol oladi;
+ * shu ikkisi bilan kiradi. Ko'rinishi xodimlar panellari (mars-admin,
+ * mars-ceo, …) bilan bir xil: `auth-screen` + Mars sayyorasi + `auth-card` +
+ * MARS wordmark + sariq «Kirish» tugmasi.
  *
- * One field takes either a phone or an email: the value is routed to the
- * matching request key, because the backend rejects an email sent as `phone`.
  * On success the access token is stored under the key `apiClient` reads, then
  * the app refetches `/auth/me` and lands on the dashboard.
  */
 export function LoginPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [identifier, setIdentifier] = useState('')
+  const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const canSubmit = /^\d{7}$/.test(loginId) && password.length > 0
 
   const login = useMutation({
-    mutationFn: () => {
-      const value = identifier.trim()
-      const isEmail = value.includes('@')
-      return authService.login(
-        isEmail ? { email: value, password } : { phone: normalizePhone(value), password },
-      )
-    },
+    mutationFn: () => authService.login({ loginId, password }),
     onSuccess: (data) => {
       localStorage.setItem(TOKEN_KEY, data.accessToken)
       qc.invalidateQueries({ queryKey: ['me'] })
@@ -57,7 +51,7 @@ export function LoginPage() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (!identifier.trim() || !password) return
+    if (!canSubmit) return
     login.mutate()
   }
 
@@ -74,7 +68,7 @@ export function LoginPage() {
       <section className="auth-card" aria-labelledby="auth-title">
         <header className="text-center">
           <div className="flex items-center justify-center">
-            <MarsLogo variant="navy" className="h-[38px]" />
+            <MarsLogo variant="navy" className="text-[34px]" />
           </div>
 
           <h1 id="auth-title" className="mt-4 text-[22px] font-bold tracking-tight text-[#0D0D5B]">
@@ -93,16 +87,18 @@ export function LoginPage() {
         <form onSubmit={onSubmit} noValidate className="mt-6 flex flex-col gap-4">
           <div>
             <label htmlFor="login-phone" className="mb-1.5 block text-xs font-semibold text-slate-700">
-              Telefon raqam
+              Login ID (7 xonali)
             </label>
             <input
-              id="login-phone"
+              id="login-loginId"
               type="text"
-              placeholder="+998 90 123 45 67"
-              autoComplete="tel"
+              inputMode="numeric"
+              maxLength={7}
+              placeholder="4820193"
+              autoComplete="off"
               className="auth-input"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              value={loginId}
+              onChange={(e) => setLoginId(normalizeLoginId(e.target.value))}
               autoFocus
               required
             />
@@ -143,7 +139,7 @@ export function LoginPage() {
             </div>
           )}
 
-          <button type="submit" className="auth-btn-submit mt-2" disabled={login.isPending || !identifier.trim() || !password}>
+          <button type="submit" className="auth-btn-submit mt-2" disabled={login.isPending || !canSubmit}>
             {login.isPending ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
