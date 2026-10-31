@@ -7,7 +7,7 @@ import { StatusBadge } from '../../components/ui/StatusBadge'
 import { ApiError, errorMessage } from '../../services/apiClient'
 import { shopService } from '../../services/shopService'
 import type { Product, Purchase } from '../../types'
-import { fmtDateTime, fmtNum, newIdempotencyKey } from '../../utils/format'
+import { assetUrl, fmtDateTime, fmtNum, newIdempotencyKey } from '../../utils/format'
 
 function useBalance() {
   return useQuery({ queryKey: ['shop', 'balance'], queryFn: shopService.balance })
@@ -22,10 +22,21 @@ function BalanceCard() {
   )
 }
 
+const ImageFallback = ({ className }: { className?: string }) => (
+  <div className={cn('grid w-full place-items-center bg-canvas text-slate-300', className)}><Package className="size-12" /></div>
+)
+
 function ProductImage({ p, className }: { p: Product; className?: string }) {
-  return p.images[0]
-    ? <img src={p.images[0]} alt={p.name} className={cn('w-full object-cover', className)} loading="lazy" />
-    : <div className={cn('grid w-full place-items-center bg-canvas text-slate-300', className)}><Package className="size-12" /></div>
+  const [broken, setBroken] = useState(false)
+  if (!p.images[0] || broken) return <ImageFallback className={className} />
+  return <img src={assetUrl(p.images[0])} alt={p.name} className={cn('w-full object-cover', className)} loading="lazy" onError={() => setBroken(true)} />
+}
+
+function OrderThumb({ src }: { src?: string | null }) {
+  const [broken, setBroken] = useState(false)
+  return !src || broken
+    ? <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-canvas"><Package className="size-5 text-slate-400" /></div>
+    : <img src={assetUrl(src)} alt="" className="size-12 shrink-0 rounded-xl object-cover" onError={() => setBroken(true)} />
 }
 
 export function ShopPage() {
@@ -147,7 +158,7 @@ function ProductModal({ productId, initial, onClose }: { productId: string; init
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
             <ProductImage p={p} className="aspect-square rounded-2xl" />
-            {p.images.length > 1 && <div className="flex gap-2">{p.images.slice(1).map((src) => <img key={src} src={src} alt="" className="size-14 rounded-lg object-cover" />)}</div>}
+            {p.images.length > 1 && <div className="flex gap-2">{p.images.slice(1).map((src) => <img key={src} src={assetUrl(src)} alt="" className="size-14 rounded-lg object-cover" />)}</div>}
           </div>
           <div>
             <p className="flex items-center gap-1.5 text-2xl font-extrabold text-amber-600"><Coins className="size-6" />{fmtNum(p.price)}</p>
@@ -176,7 +187,7 @@ export function OrdersPage() {
           <Card className="divide-y divide-line">
             {orders.data.map((o) => (
               <button key={o.id} onClick={() => setSelected(o)} className="flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-canvas sm:px-5">
-                {o.productImage ? <img src={o.productImage} alt="" className="size-12 rounded-xl object-cover" /> : <div className="grid size-12 place-items-center rounded-xl bg-canvas"><Package className="size-5 text-slate-400" /></div>}
+                <OrderThumb src={o.productImage} />
                 <div className="min-w-0 flex-1"><p className="truncate font-semibold">{o.productName}</p><p className="text-xs text-muted">{fmtDateTime(o.createdAt)} · #{o.id}</p></div>
                 <span className="hidden font-bold text-amber-600 sm:block">{fmtNum(o.totalPrice)}</span>
                 <StatusBadge status={o.status} />

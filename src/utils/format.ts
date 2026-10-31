@@ -1,4 +1,5 @@
 import type { Tone } from '../components/ui'
+import { API_BASE_URL } from '../services/apiClient'
 
 export const fmtNum = (n: number) => new Intl.NumberFormat('ru-RU').format(n)
 export const fmtMoney = (n: number, cur = 'UZS') => `${fmtNum(n)} ${cur === 'UZS' ? "so'm" : cur}`
@@ -9,6 +10,14 @@ export const fmtDateTime = (iso: string) =>
 export const fmtSize = (b?: number | null) => (b ? (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.round(b / 1e3)} KB`) : '')
 
 export const newIdempotencyKey = () => crypto.randomUUID()
+
+/**
+ * Stored asset URLs are API-relative (`/assets/products/tshirt.png`); the
+ * panel runs on another origin, so prefix them with the API origin. Absolute
+ * URLs are returned untouched.
+ */
+export const assetUrl = (path?: string | null) =>
+  !path ? '' : /^https?:\/\//i.test(path) ? path : new URL(path, API_BASE_URL).href
 
 export const statusMap: Record<string, [string, Tone]> = {
   not_submitted: ['Topshirilmagan', 'gray'], submitted: ['Topshirildi', 'blue'], in_review: ['Tekshirilmoqda', 'yellow'],
