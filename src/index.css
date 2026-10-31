@@ -208,15 +208,17 @@ body {
 
 .auth-input {
   width: 100%;
-  height: 46px;
-  padding: 0 16px;
-  border-radius: 12px;
+  height: 48px;
+  /* 44px insets: the glyph sits left, the eye toggle right (pill fields). */
+  padding: 0 44px;
+  border-radius: 999px;
   border: 1.5px solid var(--mars-gray-200);
   font-size: 15px;
   color: var(--mars-navy);
   font-weight: 500;
   outline: none;
   background: #ffffff;
+  box-shadow: 0 1px 2px rgba(13, 13, 91, 0.06);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -236,8 +238,8 @@ body {
 
 .auth-btn-submit {
   width: 100%;
-  height: 48px;
-  border-radius: 12px;
+  height: 50px;
+  border-radius: 999px;
   background: linear-gradient(135deg, #f44516 0%, #dc390d 100%);
   color: #ffffff;
   font-size: 15.5px;

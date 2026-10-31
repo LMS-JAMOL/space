@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, TOKEN_KEY, USE_MOCKS } from '../../services/apiClient'
+import { ApiError, USE_MOCKS, clearTokens } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 import { notificationService } from '../../services/notificationService'
 import { fmtDateTime, fmtNum } from '../../utils/format'
@@ -124,7 +124,7 @@ function ProfileMenu() {
       {open && (
         <div className="absolute right-0 top-11 z-40 w-56 rounded-2xl border border-line bg-white p-2 shadow-lift animate-fade-up">
           <div className="px-3 py-2"><div className="font-bold">{me?.fullName}</div><div className="text-xs text-muted">Guruh: {me?.group ?? '—'} · Level {me?.level}</div></div>
-          <button onClick={() => authService.logout().catch(() => {}).finally(() => { localStorage.removeItem('access_token'); location.reload() })}
+          <button onClick={() => authService.logout().catch(() => {}).finally(() => { clearTokens(); location.reload() })}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
             <LogOut className="size-4" />Chiqish
           </button>
@@ -141,11 +141,13 @@ export function AppLayout() {
   const { data: me, error } = useMe()
   const dark = pathname.startsWith('/battle')
 
-  // Expired or revoked session: drop the dead token and send the user to the
-  // login screen instead of rendering the shell around a failing profile.
+  // Session genuinely dead (refresh failed too): drop the tokens and send the
+  // user to the login screen instead of rendering the shell around a failing
+  // profile. A plain access-token expiry never lands here — the client
+  // refreshes silently before that (see apiClient's keep-alive).
   useEffect(() => {
     if (error instanceof ApiError && error.status === 401) {
-      localStorage.removeItem(TOKEN_KEY)
+      clearTokens()
       navigate('/login', { replace: true })
     }
   }, [error, navigate])

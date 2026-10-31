@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import MarsLogo from '../../components/ui/MarsLogo'
-import { errorMessage, TOKEN_KEY } from '../../services/apiClient'
+import { errorMessage, REFRESH_TOKEN_KEY, TOKEN_KEY } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 
 const hasToken = () => Boolean(localStorage.getItem(TOKEN_KEY))
@@ -12,6 +12,16 @@ const normalizeLoginId = (value: string) => value.replace(/\D/g, '').slice(0, 7)
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+)
+
+/** ID-card glyph for the login ID field (matches the eye icons below). */
+const IdCardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="3" /><circle cx="8.5" cy="11" r="2" /><path d="M5.5 16c.6-1.4 1.7-2 3-2s2.4.6 3 2" /><path d="M14.5 10h4M14.5 13.5h3" /></svg>
+)
+
+/** Lock glyph pinned to the left of the password field. */
+const LockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="11" rx="3" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><circle cx="12" cy="15.5" r="1.4" /></svg>
 )
 
 const EyeOffIcon = () => (
@@ -41,6 +51,8 @@ export function LoginPage() {
     mutationFn: () => authService.login({ loginId, password }),
     onSuccess: (data) => {
       localStorage.setItem(TOKEN_KEY, data.accessToken)
+      // Fallback copy for refreshing when the httpOnly cookie is not sent.
+      if (data.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
       qc.invalidateQueries({ queryKey: ['me'] })
       navigate('/main-page', { replace: true })
     },
@@ -85,43 +97,52 @@ export function LoginPage() {
         </header>
 
         <form onSubmit={onSubmit} noValidate className="mt-6 flex flex-col gap-4">
+          <p className="text-center text-[13px] font-medium text-slate-500">ID va parol bilan kirish</p>
+
           <div>
-            <label htmlFor="login-phone" className="mb-1.5 block text-xs font-semibold text-slate-700">
-              Login ID (7 xonali)
+            <label htmlFor="login-loginId" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.09em] text-slate-600">
+              MARS ID
             </label>
-            <input
-              id="login-loginId"
-              type="text"
-              inputMode="numeric"
-              maxLength={7}
-              placeholder="4820193"
-              autoComplete="off"
-              className="auth-input"
-              value={loginId}
-              onChange={(e) => setLoginId(normalizeLoginId(e.target.value))}
-              autoFocus
-              required
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                <IdCardIcon />
+              </span>
+              <input
+                id="login-loginId"
+                type="text"
+                inputMode="numeric"
+                maxLength={7}
+                autoComplete="off"
+                className="auth-input"
+                value={loginId}
+                onChange={(e) => setLoginId(normalizeLoginId(e.target.value))}
+                autoFocus
+                required
+              />
+            </div>
           </div>
 
           <div>
-            <label htmlFor="login-password" className="mb-1.5 block text-xs font-semibold text-slate-700">
+            <label htmlFor="login-password" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.09em] text-slate-600">
               Parol
             </label>
             <div className="relative">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                <LockIcon />
+              </span>
               <input
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Parol"
+                placeholder="Parolni kiriting"
                 autoComplete="current-password"
-                className={`auth-input pr-10${login.isError ? ' has-error' : ''}`}
+                className={`auth-input${login.isError ? ' has-error' : ''}`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'}
               >
