@@ -1,3 +1,5 @@
+import { trNow } from '../context/languageRuntime'
+
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 
 // Mocks are only reachable in `vite dev`; production builds always hit the real API.
@@ -120,7 +122,7 @@ if (typeof window !== 'undefined') {
 async function parseError(res: Response): Promise<ApiError> {
   const data = await res.json().catch(() => null)
   const message =
-    data?.message ?? data?.error ?? (res.status >= 500 ? 'Server xatosi' : `So'rov bajarilmadi (${res.status})`)
+    data?.message ?? data?.error ?? (res.status >= 500 ? trNow('Server xatosi') : `${trNow("So'rov bajarilmadi")} (${res.status})`)
   return new ApiError(res.status, String(message), data?.code, data?.details)
 }
 
@@ -155,7 +157,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
     })
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e
-    throw new ApiError(0, "Tarmoq xatosi: serverga ulanib bo'lmadi")
+    throw new ApiError(0, trNow("Tarmoq xatosi: serverga ulanib bo'lmadi"))
   }
 
   if (res.status === 401 && !retried && (await refreshToken())) {
@@ -176,5 +178,5 @@ export const api = {
 export function errorMessage(e: unknown): string {
   if (e instanceof ApiError) return e.message
   if (e instanceof Error) return e.message
-  return "Noma'lum xato"
+  return trNow("Noma'lum xato")
 }

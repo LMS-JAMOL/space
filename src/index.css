@@ -9,8 +9,8 @@
   --color-mars-200: #ffc8a8;
   --color-mars-300: #ffa070;
   --color-mars-400: #ff7a3d;
-  --color-mars-500: #ff5a1f;
-  --color-mars-600: #ef3f0b;
+  --color-mars-500: #ef400f;
+  --color-mars-600: #c9360b;
   --color-mars-700: #c62e0b;
 
   --color-navy-50: #eef2fb;
@@ -22,12 +22,13 @@
   --color-navy-900: #0c1226;
   --color-navy-950: #070b18;
 
-  --color-ink: #141a2e;
-  --color-muted: #6b7289;
-  --color-line: #e8eaf0;
-  --color-canvas: #f5f6fa;
+  /* space.marsit.uz "Eski" rejimidan o'lchangan qiymatlar */
+  --color-ink: #393333;
+  --color-muted: #6b6767;
+  --color-line: #e3e8f1;
+  --color-canvas: #f5f5f5;
 
-  --shadow-card: 0 1px 2px rgb(20 26 46 / 0.04), 0 4px 16px -4px rgb(20 26 46 / 0.06);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-lift: 0 2px 4px rgb(20 26 46 / 0.05), 0 16px 32px -12px rgb(20 26 46 / 0.16);
 
   --animate-fade-up: fade-up 0.35s ease-out both;
@@ -273,6 +274,315 @@ body {
 }
 
 
+/* ---- Language switcher (same markup/CSS as the staff panels) ----
+   The panels get dropdown behaviour from DaisyUI; this app has none, so the
+   few rules the switcher relies on are spelled out here, together with the
+   colour variables the shared CSS reads. */
+:root {
+  --color-base-100: #ffffff;
+  --color-base-300: var(--color-line);
+  --color-base-content: var(--color-ink);
+  --color-primary: var(--color-mars-500);
+  --color-primary-content: #ffffff;
+  --color-secondary: var(--color-navy-700);
+}
+.dropdown { position: relative; display: inline-block; }
+.dropdown .dropdown-content { position: absolute; z-index: 60; visibility: hidden; opacity: 0; }
+.dropdown.dropdown-end .dropdown-content { right: 0; }
+.dropdown:focus-within .dropdown-content { visibility: visible; opacity: 1; }
+
+
+.auth-lang {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.auth-lang__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 76px;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease,
+    box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.auth-lang__flag {
+  display: block;
+  width: 20px;
+  height: 14px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.auth-lang__chip:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.12));
+  transform: translateY(-2px);
+}
+
+.auth-lang__chip.is-active {
+  color: #ffffff;
+  border-color: #f44516;
+  background: linear-gradient(135deg, #f44516, #b8290a);
+  box-shadow: 0 10px 22px rgba(244, 69, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ── Language "select" (topbar) ──────────────────────────────────────────
+   One control, two looks: the default sits on the navy bar (frosted white),
+   `.lang-select--light` sits on the night-theme bar (dark text). Unlayered
+   on purpose — it must beat daisyUI's layered `.dropdown-content` rules. */
+.lang-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 13px;
+  border-radius: 13px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07));
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 8px rgba(0, 0, 0, 0.16);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.lang-select:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.lang-select:focus,
+.lang-select:focus-visible {
+  outline: none;
+  border-color: #f44516;
+  box-shadow: 0 0 0 3px rgba(244, 69, 22, 0.38);
+}
+
+.lang-select--light {
+  color: var(--color-base-content);
+  border-color: color-mix(in srgb, var(--color-base-content) 20%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-base-content) 9%, transparent),
+    color-mix(in srgb, var(--color-base-content) 4%, transparent)
+  );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-base-content) 14%, transparent);
+}
+
+.lang-select--light:hover {
+  border-color: color-mix(in srgb, var(--color-base-content) 38%, transparent);
+}
+
+.lang-flag {
+  display: block;
+  flex: none;
+  width: 21px;
+  height: 14px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.lang-select__icon {
+  opacity: 0.75;
+}
+
+.lang-select__chev {
+  opacity: 0.7;
+  transition: transform 0.18s ease;
+}
+
+.lang-select:focus-within .lang-select__chev {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* ── Language "options" (the dropdown that opens under it) ───────────── */
+.dropdown-content.lang-menu {
+  min-width: 244px;
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid var(--color-base-300);
+  background: var(--color-base-100);
+  box-shadow: 0 24px 52px rgba(13, 13, 91, 0.26), 0 3px 8px rgba(13, 13, 91, 0.12);
+  z-index: 999;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 13px;
+  text-align: start;
+  color: var(--color-base-content);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.lang-option:hover {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  transform: translateX(3px);
+}
+
+.lang-option.is-active {
+  color: var(--color-primary-content);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 62%, var(--color-secondary))
+  );
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 38%, transparent);
+}
+
+.lang-option__flag {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  flex: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-base-content) 9%, transparent);
+}
+
+.lang-option__flag .lang-flag {
+  width: 22px;
+  height: 15px;
+  border-radius: 4px;
+}
+
+.lang-option.is-active .lang-option__flag {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lang-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.lang-option__native {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.lang-option__hint {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+.lang-option__check {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  margin-left: auto;
+  flex: none;
+}
+
+/* Keyboard users get one consistent, visible focus ring on every control. */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Respect the OS "reduce motion" setting: the orbit/auth animations and the
+   page transitions become instant instead of decorative. */
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---- Login: "Liquid Blobs" scene + frosted glass card (space.marsit.uz) ---- */
+.auth-screen {
+  background-color: #0a0a1f;
+  background-image:
+    radial-gradient(closest-side, #e24480 62%, transparent 100%),
+    radial-gradient(closest-side, #3f63d8 62%, transparent 100%),
+    radial-gradient(closest-side, #b44cf0 58%, transparent 100%),
+    radial-gradient(closest-side, #3fe0b5 58%, transparent 100%);
+  background-size: 48vw 48vw, 44vw 44vw, 26vw 26vw, 30vw 30vw;
+  background-position: -12vw -14vh, calc(100% + 8vw) 22vh, 62% 40%, 30% calc(100% + 10vw);
+  background-repeat: no-repeat;
+}
+.auth-screen::before,
+.auth-screen::after,
+.auth-planet,
+.auth-orbit { display: none; }
+
+.auth-card {
+  max-width: 412px;
+  padding: 32px 28px 28px;
+  border-radius: 24px;
+  border: 0.8px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.47) 55%, rgba(255, 255, 255, 0.53));
+  -webkit-backdrop-filter: blur(42px) saturate(2);
+  backdrop-filter: blur(42px) saturate(2);
+  box-shadow:
+    0 32px 64px -20px rgba(16, 12, 44, 0.42),
+    0 8px 24px -14px rgba(16, 12, 44, 0.28),
+    inset 0 1px 1px rgba(255, 255, 255, 0.72);
+}
+.auth-card label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(22, 24, 46, 0.75);
+}
+.auth-card .text-slate-500 { color: rgba(22, 24, 46, 0.75); }
+
+.auth-input {
+  height: 48px;
+  border: 0;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #16182e;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px rgba(22, 24, 46, 0.16), 0 1px 2px rgba(20, 12, 50, 0.1);
+}
+.auth-input:focus {
+  box-shadow: inset 0 0 0 1.5px #fc6736, 0 0 0 3px rgba(252, 103, 54, 0.25);
+}
+.auth-input.has-error,
+.auth-input.has-error:focus {
+  box-shadow: inset 0 0 0 1.5px #ff2340, 0 0 0 3px rgba(255, 35, 64, 0.2);
+}
+
+.auth-btn-submit {
+  height: 46px;
+  border-radius: 13px;
+  font-size: 14.5px;
+  background: linear-gradient(165deg, #ff7a45 0, #fc6736 55%, #f15a22 100%);
+  box-shadow: 0 10px 22px -10px rgba(252, 103, 54, 0.7);
+}
+.auth-btn-submit:hover:not(:disabled) {
+  box-shadow: 0 14px 26px -10px rgba(252, 103, 54, 0.8);
 }

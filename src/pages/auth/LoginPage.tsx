@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { Flag } from '../../components/layout/LangSwitcher'
 import MarsLogo from '../../components/ui/MarsLogo'
+import { useLanguage } from '../../context/LanguageContext'
 import { errorMessage, REFRESH_TOKEN_KEY, TOKEN_KEY } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 
@@ -40,6 +42,7 @@ const EyeOffIcon = () => (
  * the app refetches `/auth/me` and lands on the dashboard.
  */
 export function LoginPage() {
+  const { tr, lang, setLang } = useLanguage()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [loginId, setLoginId] = useState('')
@@ -80,24 +83,24 @@ export function LoginPage() {
       <section className="auth-card" aria-labelledby="auth-title">
         <header className="text-center">
           <div className="flex items-center justify-center">
-            <MarsLogo variant="navy" className="text-[34px]" />
+            <MarsLogo variant="navy" className="h-16 w-auto" />
           </div>
 
           <h1 id="auth-title" className="mt-4 text-[22px] font-bold tracking-tight text-[#0D0D5B]">
-            Talaba paneli uchun kirish
+            {tr('Talaba paneli uchun kirish')}
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500">
-            Mars Space — o‘quvchi kabineti
+            {tr('Mars Space — o‘quvchi kabineti')}
           </p>
 
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#f44516]/20 bg-[#f44516]/10 px-3.5 py-1 text-xs font-semibold text-[#f44516]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[#f44516]" />
-            Student panel
+            {tr('Student panel')}
           </div>
         </header>
 
         <form onSubmit={onSubmit} noValidate className="mt-6 flex flex-col gap-4">
-          <p className="text-center text-[13px] font-medium text-slate-500">ID va parol bilan kirish</p>
+          <p className="text-center text-[13px] font-medium text-slate-500">{tr('ID va parol bilan kirish')}</p>
 
           <div>
             <label htmlFor="login-loginId" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.09em] text-slate-600">
@@ -124,7 +127,7 @@ export function LoginPage() {
 
           <div>
             <label htmlFor="login-password" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.09em] text-slate-600">
-              Parol
+              {tr('Parol')}
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -133,7 +136,7 @@ export function LoginPage() {
               <input
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Parolni kiriting"
+                placeholder={tr('Parolni kiriting')}
                 autoComplete="current-password"
                 className={`auth-input${login.isError ? ' has-error' : ''}`}
                 value={password}
@@ -144,7 +147,7 @@ export function LoginPage() {
                 type="button"
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'}
+                aria-label={showPassword ? tr('Parolni yashirish') : tr('Parolni ko‘rsatish')}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
@@ -164,14 +167,30 @@ export function LoginPage() {
             {login.isPending ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                Kirilmoqda…
+                {tr('Kirilmoqda…')}
               </span>
             ) : (
-              <span>Kirish</span>
+              <span>{tr('Kirish')}</span>
             )}
           </button>
         </form>
       </section>
+
+      {/* Language chips — same control as the staff panels' login screens. */}
+      <nav className="auth-lang" aria-label={tr('Til tanlash')}>
+        {(['uz', 'ru'] as const).map((code) => (
+          <button
+            key={code}
+            type="button"
+            className={lang === code ? 'auth-lang__chip is-active' : 'auth-lang__chip'}
+            onClick={() => setLang(code)}
+            aria-pressed={lang === code}
+          >
+            <Flag code={code} className="auth-lang__flag" />
+            {code === 'uz' ? 'Uz' : 'Ru'}
+          </button>
+        ))}
+      </nav>
     </main>
   )
 }

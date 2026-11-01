@@ -1,12 +1,13 @@
 import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, Loader2, RotateCw, Search, X } from 'lucide-react'
 import { useEffect, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useLanguage } from '../../context/LanguageContext'
 import { errorMessage } from '../../services/apiClient'
 
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ')
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dark'
 const variants: Record<Variant, string> = {
-  primary: 'bg-mars-500 text-white hover:bg-mars-600 shadow-sm shadow-mars-500/30',
+  primary: 'bg-mars-500 text-white hover:bg-mars-600',
   secondary: 'bg-white text-ink border border-line hover:border-mars-300 hover:text-mars-600',
   ghost: 'text-muted hover:bg-canvas hover:text-ink',
   danger: 'bg-red-50 text-red-600 hover:bg-red-100',
@@ -21,7 +22,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none',
+        'inline-flex items-center justify-center gap-2 rounded-[10px] font-semibold transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none',
         size === 'sm' ? 'h-8 px-3 text-sm' : size === 'lg' ? 'h-12 px-6' : 'h-10 px-4 text-sm',
         variants[variant], className,
       )}
@@ -35,7 +36,7 @@ export function Button({
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   // Skip the default background when the caller supplies one — Tailwind can't resolve two bg-* by order.
   const customBg = /(^|\s)bg-/.test(className ?? '')
-  return <div className={cn('rounded-2xl border border-line/70 shadow-card', !customBg && 'bg-white', className)}>{children}</div>
+  return <div className={cn('rounded-lg shadow-card', !customBg && 'bg-white', className)}>{children}</div>
 }
 
 export function PageHeader({ title, subtitle, actions, dark }: { title: string; subtitle?: string; actions?: ReactNode; dark?: boolean }) {
@@ -91,22 +92,24 @@ export function EmptyState({ title, text, icon, action }: { title: string; text?
 }
 
 export function ErrorState({ error, onRetry, dark }: { error: unknown; onRetry?: () => void; dark?: boolean }) {
+  const { tr } = useLanguage()
   return (
     <div className={cn('flex flex-col items-center rounded-2xl px-6 py-12 text-center', dark ? 'bg-navy-800 text-white' : 'bg-red-50/60 border border-red-100')}>
       <AlertTriangle className="mb-2 size-8 text-red-500" />
-      <p className="font-bold">Ma'lumotni yuklab bo'lmadi</p>
+      <p className="font-bold">{tr("Ma'lumotni yuklab bo'lmadi")}</p>
       <p className={cn('mt-1 text-sm', dark ? 'text-navy-300' : 'text-muted')}>{errorMessage(error)}</p>
-      {onRetry && <Button variant="secondary" size="sm" className="mt-4" onClick={onRetry}><RotateCw className="size-4" />Qayta urinish</Button>}
+      {onRetry && <Button variant="secondary" size="sm" className="mt-4" onClick={onRetry}><RotateCw className="size-4" />{tr('Qayta urinish')}</Button>}
     </div>
   )
 }
 
-export function SearchInput({ value, onChange, placeholder = 'Qidirish...' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const { tr } = useLanguage()
   return (
     <label className="relative block w-full sm:w-72">
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="h-10 w-full rounded-xl border border-line bg-white pl-9 pr-3 text-sm outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? tr('Qidirish...')}
+        className="h-10 w-full rounded-[10px] border border-line bg-white pl-9 pr-3 text-sm outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
     </label>
   )
 }
@@ -129,27 +132,29 @@ export function Chips<T extends string>({ options, value, onChange, dark }: { op
 export function Select({ value, onChange, options, className }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      className={cn('h-10 rounded-xl border border-line bg-white px-3 text-sm font-medium outline-none focus:border-mars-400', className)}>
+      className={cn('h-10 rounded-[10px] border border-line bg-white px-3 text-sm font-medium outline-none focus:border-mars-400', className)}>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   )
 }
 
 export function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
+  const { tr } = useLanguage()
   const pages = Math.max(1, Math.ceil(total / pageSize))
   if (pages <= 1) return null
   return (
     <div className="mt-6 flex items-center justify-center gap-1">
-      <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Oldingi"><ChevronLeft className="size-4" /></Button>
+      <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label={tr('Oldingi')}><ChevronLeft className="size-4" /></Button>
       {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
         <Button key={p} size="sm" variant={p === page ? 'primary' : 'ghost'} onClick={() => onChange(p)}>{p}</Button>
       ))}
-      <Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => onChange(page + 1)} aria-label="Keyingi"><ChevronRight className="size-4" /></Button>
+      <Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => onChange(page + 1)} aria-label={tr('Keyingi')}><ChevronRight className="size-4" /></Button>
     </div>
   )
 }
 
 export function Modal({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; size?: 'md' | 'lg' }) {
+  const { tr } = useLanguage()
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -167,7 +172,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: {
       <div className={cn('relative w-full max-h-[92vh] overflow-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-lift animate-fade-up', size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md')}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white px-5 py-4">
           <h2 className="font-bold">{title}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-muted hover:bg-canvas" aria-label="Yopish"><X className="size-5" /></button>
+          <button onClick={onClose} className="rounded-lg p-1 text-muted hover:bg-canvas" aria-label={tr('Yopish')}><X className="size-5" /></button>
         </div>
         <div className="p-5">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-5 py-4">{footer}</div>}
@@ -199,7 +204,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   )
 }
 
-export const inputCls = 'h-10 w-full rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100'
+export const inputCls = 'h-10 w-full rounded-[10px] border border-line bg-white px-3 text-sm outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100'
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { value: T; label: string; count?: number }[]; value: T; onChange: (v: T) => void }) {
   return (

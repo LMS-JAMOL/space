@@ -4,6 +4,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
+import { useLanguage } from '../context/LanguageContext'
 import { ApiError } from '../services/apiClient'
 import { AlgoPage, EdversePage } from '../pages/algo/AlgoEdversePages'
 import BattlePage from '../pages/battle/BattlePage'
@@ -25,6 +26,11 @@ const queryClient = new QueryClient({
     mutations: { retry: false },
   },
 })
+
+function NotFound() {
+  const { tr } = useLanguage()
+  return <EmptyState title={tr('Sahifa topilmadi')} icon={<Compass />} action={<Link to="/main-page"><Button>{tr('Asosiyga')}</Button></Link>} />
+}
 
 export default function App() {
   return (
@@ -50,7 +56,7 @@ export default function App() {
             <Route path="space-shop" element={<ShopPage />} />
             <Route path="space-shop/orders" element={<OrdersPage />} />
             <Route path="space-shop/products/:productId" element={<ProductRedirect />} />
-            <Route path="*" element={<EmptyState title="Sahifa topilmadi" icon={<Compass />} action={<Link to="/main-page"><Button>Asosiyga</Button></Link>} />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </BrowserRouter>

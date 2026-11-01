@@ -5,7 +5,8 @@ import { Button, Chips, ErrorState, PageHeader, Skeleton, cn } from '../../compo
 import { errorMessage } from '../../services/apiClient'
 import { battleService } from '../../services/battleService'
 import type { BattleMatch } from '../../types'
-import { fmtDateTime } from '../../utils/format'
+import { useLanguage } from '../../context/LanguageContext'
+import { fill, fmtDateTime } from '../../utils/format'
 
 // The API validates `language` / `difficulty` against fixed enums, so the
 // selectable values must be the enum codes and only the labels are localized.
@@ -28,6 +29,7 @@ function Panel({ className, children }: { className?: string; children: React.Re
 }
 
 export default function BattlePage() {
+  const { tr } = useLanguage()
   const qc = useQueryClient()
   const [lang, setLang] = useState<string>(LANGS[0].value)
   const [diff, setDiff] = useState<string>(DIFFS[1].value)
@@ -67,7 +69,7 @@ export default function BattlePage() {
   return (
     <div className="-mx-4 -my-6 min-h-[calc(100vh-4rem)] bg-navy-950 px-4 py-6 lg:-mx-8 lg:-my-8 lg:px-8 lg:py-8">
       <div className="pointer-events-none absolute inset-x-0 top-16 h-72 bg-[radial-gradient(ellipse_at_top,rgba(255,90,31,.18),transparent_60%)]" />
-      <PageHeader dark title="Battle Arena" subtitle="Real raqiblar bilan kod jangi" />
+      <PageHeader dark title={tr('Battle Arena')} subtitle={tr('Real raqiblar bilan kod jangi')} />
 
       <div className="relative grid gap-5 lg:grid-cols-3">
         <Panel className="lg:col-span-1">
@@ -75,16 +77,16 @@ export default function BattlePage() {
             <>
               <div className="flex items-center gap-3">
                 <div className="grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-mars-400 to-mars-600 text-xl font-extrabold">{p.nickname[0].toUpperCase()}</div>
-                <div><p className="text-lg font-extrabold">{p.nickname}</p><p className="font-mono text-sm text-mars-400">{p.rating} reyting</p></div>
+                <div><p className="text-lg font-extrabold">{p.nickname}</p><p className="font-mono text-sm text-mars-400">{p.rating} {tr('reyting')}</p></div>
               </div>
               <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                {[['G\'alaba', p.wins, 'text-emerald-400'], ['Mag\'lub', p.losses, 'text-red-400'], ['Streak', p.streak, 'text-mars-400']].map(([l, v, c]) => (
-                  <div key={l as string} className="rounded-xl bg-navy-800 p-3"><div className={cn('font-mono text-xl font-bold', c as string)}>{v}</div><div className="text-[11px] text-navy-300">{l}</div></div>
+                {[["G'alaba", p.wins, 'text-emerald-400'], ["Mag'lub", p.losses, 'text-red-400'], ['Streak', p.streak, 'text-mars-400']].map(([l, v, c]) => (
+                  <div key={l as string} className="rounded-xl bg-navy-800 p-3"><div className={cn('font-mono text-xl font-bold', c as string)}>{v}</div><div className="text-[11px] text-navy-300">{tr(l as string)}</div></div>
                 ))}
               </div>
-              <p className="mb-2 mt-5 text-xs font-bold uppercase text-navy-300">Yutuqlar</p>
+              <p className="mb-2 mt-5 text-xs font-bold uppercase text-navy-300">{tr('Yutuqlar')}</p>
               <div className="flex flex-wrap gap-2">
-                {p.achievements.length === 0 && <span className="text-sm text-navy-400">Hali yo'q</span>}
+                {p.achievements.length === 0 && <span className="text-sm text-navy-400">{tr("Hali yo'q")}</span>}
                 {p.achievements.map((a) => <span key={a.id} title={fmtDateTime(a.earnedAt)} className="rounded-lg bg-navy-800 px-2.5 py-1 text-xs font-semibold">{a.icon} {a.title}</span>)}
               </div>
             </>
@@ -96,15 +98,15 @@ export default function BattlePage() {
             <>
               <div className="mb-4 flex flex-wrap justify-center gap-3">
                 <Chips dark value={lang} onChange={setLang} options={[...LANGS]} />
-                <Chips dark value={diff} onChange={setDiff} options={[...DIFFS]} />
+                <Chips dark value={diff} onChange={setDiff} options={DIFFS.map((d) => ({ value: d.value, label: tr(d.label) }))} />
               </div>
               <button onClick={() => create.mutate(undefined)} disabled={create.isPending}
                 className="group my-4 grid size-40 place-items-center rounded-full bg-gradient-to-br from-mars-400 to-mars-600 shadow-[0_0_60px_-10px] shadow-mars-500 transition hover:scale-105 active:scale-95 disabled:opacity-60">
-                {create.isPending ? <Loader2 className="size-10 animate-spin" /> : <div><Swords className="mx-auto size-10" /><span className="mt-1 block text-sm font-extrabold">Raqib topish</span></div>}
+                {create.isPending ? <Loader2 className="size-10 animate-spin" /> : <div><Swords className="mx-auto size-10" /><span className="mt-1 block text-sm font-extrabold">{tr('Raqib topish')}</span></div>}
               </button>
               {create.error && <p className="text-sm text-red-400">{errorMessage(create.error)}</p>}
-              {m?.status === 'cancelled' && <p className="text-sm text-navy-300">Qidiruv bekor qilindi</p>}
-              {match.error && <p className="text-sm text-red-400">Jang holatini olib bo'lmadi: {errorMessage(match.error)} <button className="underline" onClick={() => track(null)}>Tozalash</button></p>}
+              {m?.status === 'cancelled' && <p className="text-sm text-navy-300">{tr('Qidiruv bekor qilindi')}</p>}
+              {match.error && <p className="text-sm text-red-400">{tr("Jang holatini olib bo'lmadi")}: {errorMessage(match.error)} <button className="underline" onClick={() => track(null)}>{tr('Tozalash')}</button></p>}
             </>
           ) : m.status === 'searching' ? (
             <>
@@ -113,34 +115,34 @@ export default function BattlePage() {
                 <span className="absolute inset-4 rounded-full border-2 border-dashed border-mars-500/60 animate-spin [animation-duration:6s]" />
                 <Search className="size-10 text-mars-400" />
               </div>
-              <p className="text-lg font-bold">Raqib qidirilmoqda...</p>
-              <p className="text-sm text-navy-300">{labelOf(LANGS, m.language)} · {labelOf(DIFFS, m.difficulty)}</p>
-              <Button variant="dark" className="mt-5" loading={cancel.isPending} onClick={() => cancel.mutate()}><X className="size-4" />Bekor qilish</Button>
+              <p className="text-lg font-bold">{tr('Raqib qidirilmoqda...')}</p>
+              <p className="text-sm text-navy-300">{labelOf(LANGS, m.language)} · {tr(labelOf(DIFFS, m.difficulty))}</p>
+              <Button variant="dark" className="mt-5" loading={cancel.isPending} onClick={() => cancel.mutate()}><X className="size-4" />{tr('Bekor qilish')}</Button>
               {cancel.error && <p className="mt-2 text-sm text-red-400">{errorMessage(cancel.error)}</p>}
             </>
           ) : (
             <>
-              <p className="mb-6 text-xs font-bold uppercase tracking-widest text-mars-400">Raqib topildi</p>
+              <p className="mb-6 text-xs font-bold uppercase tracking-widest text-mars-400">{tr('Raqib topildi')}</p>
               <div className="flex items-center gap-6 sm:gap-10">
                 <div><div className="mx-auto grid size-20 place-items-center rounded-2xl bg-mars-500 text-2xl font-extrabold">{p?.nickname[0].toUpperCase()}</div><p className="mt-2 font-bold">{p?.nickname}</p></div>
                 <span className="font-mono text-3xl font-extrabold text-mars-400">VS</span>
                 <div><div className="mx-auto grid size-20 place-items-center rounded-2xl bg-navy-600 text-2xl font-extrabold">{m.opponent?.nickname[0].toUpperCase() ?? '?'}</div><p className="mt-2 font-bold">{m.opponent?.nickname ?? '—'}</p></div>
               </div>
-              <p className="mt-6 text-sm text-navy-300">Holat: {m.status}. Jang interfeysi backend real-time kontraktidan keyin ulanadi.</p>
-              <Button variant="dark" className="mt-4" onClick={() => track(null)}>Yopish</Button>
+              <p className="mt-6 text-sm text-navy-300">{tr('Holat')}: {m.status}. {tr('Jang interfeysi backend real-time kontraktidan keyin ulanadi.')}</p>
+              <Button variant="dark" className="mt-4" onClick={() => track(null)}>{tr('Yopish')}</Button>
             </>
           )}
         </Panel>
 
         <Panel>
-          <h2 className="mb-3 font-bold">Onlayn raqiblar</h2>
+          <h2 className="mb-3 font-bold">{tr('Onlayn raqiblar')}</h2>
           {opponents.isLoading ? <Skeleton className="h-40 bg-navy-800" /> : opponents.error ? <ErrorState dark error={opponents.error} onRetry={opponents.refetch} /> : (
             <ul className="space-y-2">
               {opponents.data?.map((o) => (
                 <li key={o.id} className="flex items-center gap-3 rounded-xl bg-navy-800 p-3">
                   <span className={cn('size-2 rounded-full', o.online ? 'bg-emerald-400' : 'bg-navy-400')} />
                   <span className="flex-1 font-semibold">{o.nickname}<span className="ml-2 font-mono text-xs text-navy-300">{o.rating}</span></span>
-                  <Button size="sm" disabled={!o.online || !!active || create.isPending} onClick={() => create.mutate(o.id)}>Chaqirish</Button>
+                  <Button size="sm" disabled={!o.online || !!active || create.isPending} onClick={() => create.mutate(o.id)}>{tr('Chaqirish')}</Button>
                 </li>
               ))}
             </ul>
@@ -148,7 +150,7 @@ export default function BattlePage() {
         </Panel>
 
         <Panel>
-          <h2 className="mb-3 flex items-center gap-2 font-bold"><Crown className="size-4 text-amber-400" />Reyting</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-bold"><Crown className="size-4 text-amber-400" />{tr('Reyting')}</h2>
           {leaderboard.isLoading ? <Skeleton className="h-40 bg-navy-800" /> : leaderboard.error ? <ErrorState dark error={leaderboard.error} /> : (
             <ol className="space-y-1.5">
               {leaderboard.data?.map((e) => (
@@ -162,14 +164,14 @@ export default function BattlePage() {
         </Panel>
 
         <Panel>
-          <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="size-4 text-mars-400" />Janglar tarixi</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="size-4 text-mars-400" />{tr('Janglar tarixi')}</h2>
           {history.isLoading ? <Skeleton className="h-40 bg-navy-800" /> : history.error ? <ErrorState dark error={history.error} />
-            : !history.data?.length ? <p className="text-sm text-navy-300">Hali janglar yo'q</p> : (
+            : !history.data?.length ? <p className="text-sm text-navy-300">{tr("Hali janglar yo'q")}</p> : (
               <ul className="space-y-2">
                 {history.data.map((h) => (
                   <li key={h.id} className="flex items-center gap-3 rounded-xl bg-navy-800 p-3 text-sm">
                     <span className={cn('rounded-md px-2 py-0.5 text-xs font-bold', h.result === 'win' ? 'bg-emerald-500/15 text-emerald-400' : h.result === 'loss' ? 'bg-red-500/15 text-red-400' : 'bg-navy-600 text-navy-300')}>
-                      {h.result === 'win' ? "G'ALABA" : h.result === 'loss' ? "MAG'LUB" : 'DURANG'}
+                      {h.result === 'win' ? tr("G'ALABA") : h.result === 'loss' ? tr("MAG'LUB") : tr('DURANG')}
                     </span>
                     <span className="flex-1">vs {h.opponent?.nickname}<span className="block text-xs text-navy-300">{fmtDateTime(h.createdAt)}</span></span>
                     {h.ratingDelta != null && <span className={cn('font-mono font-bold', h.ratingDelta >= 0 ? 'text-emerald-400' : 'text-red-400')}>{h.ratingDelta > 0 && '+'}{h.ratingDelta}</span>}
@@ -177,7 +179,7 @@ export default function BattlePage() {
                 ))}
               </ul>
             )}
-          {p && p.streak >= 3 && <p className="mt-3 flex items-center gap-1 text-xs text-mars-400"><Flame className="size-3" />{p.streak} ketma-ket g'alaba!</p>}
+          {p && p.streak >= 3 && <p className="mt-3 flex items-center gap-1 text-xs text-mars-400"><Flame className="size-3" />{fill(tr("{n} ketma-ket g'alaba!"), { n: p.streak })}</p>}
         </Panel>
       </div>
     </div>
