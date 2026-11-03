@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, BookOpen, CalendarClock, Check, Coins, Flame, Keyboard, Lock, PlayCircle, ShoppingBag, Swords, Trophy } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BookOpen, CalendarClock, Check, Coins, Flame, Keyboard, Lock, PlayCircle, ShoppingBag, Swords, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
 import { useLanguage } from '../../context/LanguageContext'
-import { fill, fmtDateTime, fmtNum } from '../../utils/format'
+import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
+import { usePaymentInfo } from '../../components/layout/AppLayout'
 
 export default function DashboardPage() {
   const { tr } = useLanguage()
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardService.get })
+  const wallet = usePaymentInfo().data?.wallet
 
   if (isLoading) return (
     <div className="grid gap-5 lg:grid-cols-3">
@@ -22,6 +24,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
+      {wallet?.warning && (
+        <div role="alert" className={cn('flex flex-wrap items-center gap-3 rounded-[10px] border px-4 py-3', wallet.warning === 'debt' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-300 bg-amber-50 text-amber-900')}>
+          <AlertTriangle className="size-5 shrink-0" />
+          <p className="min-w-0 flex-1 text-sm font-semibold">
+            {wallet.warning === 'debt'
+              ? fill(tr("Sizda {sum} qarz bor. Iltimos, to'lovni amalga oshiring."), { sum: fmtMoney(wallet.debt) })
+              : fill(tr("Oy oxiri yaqinlashmoqda: to'langan qoldiq {sum}. Keyingi oy darslari uchun to'lovni oldindan qiling."), { sum: fmtMoney(wallet.remaining) })}
+          </p>
+          <Link to="/online-payment"><Button size="sm">{tr("To'lash")}</Button></Link>
+        </div>
+      )}
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2 animate-fade-up">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gradient-to-br from-mars-200 to-mars-500 opacity-25 blur-2xl" />

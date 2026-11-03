@@ -8,7 +8,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, USE_MOCKS, clearTokens } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 import { notificationService } from '../../services/notificationService'
-import { fmtDateTime, fmtNum } from '../../utils/format'
+import { fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
+import { paymentService } from '../../services/paymentService'
 import { Badge, cn } from '../ui'
 import { useLanguage } from '../../context/LanguageContext'
 import MarsLogo from '../ui/MarsLogo'
@@ -18,6 +19,7 @@ export const NAV = [
   { to: '/main-page', label: 'Asosiy', icon: LayoutDashboard },
   { to: '/my-courses', label: 'Kurslarim', icon: BookOpen },
   { to: '/my-works', label: 'Mening ishlarim', icon: Briefcase },
+  { to: '/tutor-booking', label: 'Qo‘shimcha darslar', icon: BookOpen },
   { to: '/battle', label: 'Battle', icon: Swords },
   { to: '/hackathon', label: 'Xakaton', icon: Trophy },
   { to: '/edverse', label: 'Edverse', icon: Globe2 },
@@ -29,6 +31,29 @@ export const NAV = [
 
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: authService.me })
 
+/** Payment info with the wallet; shared by the sidebar, the main page and the payment page. */
+export const usePaymentInfo = () => useQuery({ queryKey: ['payments', 'info'], queryFn: paymentService.info, refetchInterval: 5 * 60_000 })
+
+/**
+ * The wallet, in front of the menu: how much of the paid money is left. It falls by one lesson
+ * price after every lesson that is held. A debt shows in red, an ending balance in amber.
+ */
+function WalletCard() {
+  const { tr } = useLanguage()
+  const { data } = usePaymentInfo()
+  const w = data?.wallet
+  if (!w) return null
+  const tone = w.warning === 'debt' ? 'border-red-200 bg-red-50' : w.warning === 'ending' ? 'border-amber-200 bg-amber-50' : 'border-line bg-white'
+  return (
+    <NavLink to="/online-payment" aria-label={tr('To‘lov hisobi')}
+      className={cn('mb-3 block rounded-[10px] border px-3 py-3 transition-colors hover:brightness-[0.98]', tone)}>
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted"><Wallet className="size-4" />{w.debt > 0 ? tr('Qarz') : tr('To‘langan qoldiq')}</div>
+      <div className={cn('mt-1 text-xl font-extrabold', w.debt > 0 ? 'text-red-600' : 'text-ink')}>{fmtMoney(w.debt > 0 ? w.debt : w.remaining)}</div>
+      {w.lessonPrice > 0 && <div className="mt-0.5 text-[11px] text-muted">{tr('1 dars')} ≈ {fmtMoney(w.lessonPrice)}</div>}
+    </NavLink>
+  )
+}
+
 function Logo({ light }: { light?: boolean }) {
   return (
     <MarsLogo variant={light ? 'white' : 'navy'} withStrapline={false} className="h-6 w-auto" />
@@ -38,6 +63,8 @@ function Logo({ light }: { light?: boolean }) {
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { tr } = useLanguage()
   return (
+    <>
+    <WalletCard />
     <nav className="flex flex-col gap-1" aria-label={tr('Asosiy navigatsiya')}>
       {NAV.map(({ to, label, icon: Icon }) => (
         <NavLink key={to} to={to} onClick={onNavigate}
@@ -54,6 +81,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </NavLink>
       ))}
     </nav>
+    </>
   )
 }
 

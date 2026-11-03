@@ -212,8 +212,22 @@ export interface Payment {
   description?: string | null
 }
 
+/** The student's wallet: the paid money that is left (falls with every held lesson), a debt, and a warning. */
+export interface Wallet {
+  paid: number
+  charged: number
+  remaining: number
+  debt: number
+  monthlyTariff: number
+  lessonPrice: number
+  warning: 'debt' | 'ending' | null
+  warningDay: number
+}
+
 export interface PaymentInfo {
   amountDue: number | null
+  pendingAmount?: number
+  wallet?: Wallet | null
   currency: string
   suggestedAmounts: number[]
   providers: string[]
