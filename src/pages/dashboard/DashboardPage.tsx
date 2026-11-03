@@ -1,11 +1,37 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, BookOpen, CalendarClock, Check, Coins, Flame, Keyboard, Lock, PlayCircle, ShoppingBag, Swords, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
+import { attendanceService } from '../../services/attendanceService'
+import { errorMessage } from '../../services/apiClient'
 import { useLanguage } from '../../context/LanguageContext'
 import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
 import { usePaymentInfo } from '../../components/layout/AppLayout'
+
+/** The student types the code the mentor shows in class: a second witness that he was at the lesson. */
+function CheckinCard() {
+  const { tr } = useLanguage()
+  const [code, setCode] = useState('')
+  const checkin = useMutation({ mutationFn: () => attendanceService.checkin(code), onSuccess: () => setCode('') })
+  const done = checkin.data?.checkin
+  return (
+    <Card className="p-5">
+      <h2 className="font-bold">{tr('Darsga kelganingizni tasdiqlang')}</h2>
+      <p className="mt-1 text-sm text-muted">{tr('Mentor darsda 6 xonali kod ko‘rsatadi — uni shu yerga kiriting.')}</p>
+      <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (/^\d{6}$/.test(code)) checkin.mutate() }}>
+        <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+          aria-label={tr('Davomat kodi')} placeholder="000000"
+          className="h-10 w-40 rounded-[10px] border border-line bg-white px-3 text-center font-mono text-lg tracking-[0.3em] outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
+        <Button type="submit" loading={checkin.isPending} disabled={!/^\d{6}$/.test(code)}>{tr('Tasdiqlash')}</Button>
+      </form>
+      {checkin.error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-600">{errorMessage(checkin.error)}</p>}
+      {done && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{done.repeated ? tr('Siz allaqachon tasdiqlagansiz') : tr('Tasdiqlandi')}{done.group ? ` — ${done.group}` : ''}</p>}
+    </Card>
+  )
+}
 
 export default function DashboardPage() {
   const { tr } = useLanguage()
@@ -35,6 +61,7 @@ export default function DashboardPage() {
           <Link to="/online-payment"><Button size="sm">{tr("To'lash")}</Button></Link>
         </div>
       )}
+      <CheckinCard />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2 animate-fade-up">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gradient-to-br from-mars-200 to-mars-500 opacity-25 blur-2xl" />

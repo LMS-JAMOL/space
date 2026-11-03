@@ -276,5 +276,10 @@
   "Chor": "Ср",
   "Pay": "Чт",
   "Jum": "Пт",
-  "Shan": "Сб"
+  "Shan": "Сб",
+  "Darsga kelganingizni tasdiqlang": "Подтвердите, что вы на уроке",
+  "Mentor darsda 6 xonali kod ko‘rsatadi — uni shu yerga kiriting.": "Ментор показывает на уроке 6-значный код — введите его сюда.",
+  "Davomat kodi": "Код посещаемости",
+  "Siz allaqachon tasdiqlagansiz": "Вы уже подтвердили",
+  "Tasdiqlandi": "Подтверждено"
 }
