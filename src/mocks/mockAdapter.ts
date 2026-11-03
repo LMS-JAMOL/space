@@ -47,6 +47,15 @@ const routes: [string, RegExp, Handler][] = [
     return [slot('a', 'Anvar Tutor', 10, 3), slot('b', 'Anvar Tutor', 15, 2), slot('c', 'Bobur Tutor', 12, 3)]
   }],
   ['POST', /^\/tutor-booking\/([^/]+)\/([^/]+)\/book$/, () => ({ booked: true })],
+  ['GET', /^\/tutor-booking\/mine$/, () => []],
+  ['PATCH', /^\/tutor-booking\/([^/]+)\/([^/]+)\/cancel$/, () => ({ cancelled: true })],
+  // homework of the student's group (dev-only data): one open, one already handed in
+  ['GET', /^\/works$/, () => [
+    { id: 'hw1', title: 'Ice cream loyihasi', description: 'Figma dizayniga mos landing sahifa yasang va hostingga joylang.', groupId: 'g1', groupName: 'Frontend-01', courseTitle: db.courses[0]?.title ?? null, status: 'not_submitted', deadline: new Date(Date.now() + 3 * 86400000).toISOString(), submittedAt: null, mentorFeedback: null, score: null, attempt: 0, canSubmit: true, needsAttention: false, attachments: [] },
+    { id: 'hw2', title: 'Flexbox mustahkamlash', description: '', groupId: 'g1', groupName: 'Frontend-01', courseTitle: db.courses[0]?.title ?? null, status: 'submitted', deadline: null, submittedAt: new Date().toISOString(), mentorFeedback: null, score: null, attempt: 1, canSubmit: false, needsAttention: false, attachments: [] },
+  ]],
+  ['GET', /^\/works\/([^/]+)\/submissions$/, ([id]) => (id === 'hw2' ? [{ id: 's1', createdAt: new Date().toISOString(), status: 'submitted', comment: 'Tayyor', link: null, feedback: null, score: null, attempt: 1, attachments: [] }] : [])],
+  ['POST', /^\/works\/([^/]+)\/submissions$/, () => ({ id: 's2', createdAt: new Date().toISOString(), status: 'submitted', comment: null, link: null, feedback: null, score: null, attempt: 1, attachments: [] })],
 
   ['GET', /^\/payments\/info$/, () => db.paymentInfo],
   ['GET', /^\/payments\/history$/, () => db.payments],

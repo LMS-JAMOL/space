@@ -307,5 +307,18 @@
   "Qo‘shimcha dars": "Дополнительное занятие",
   "Kunni tanlab “+” ni bosing, tutor va qulay vaqtni tanlang, mavzuni yozing.": "Выберите день и нажмите «+», затем тьютора и удобное время, напишите тему.",
   "Qo‘shimcha dars qo‘shish": "Записаться на дополнительное занятие",
-  "Nimani o‘rganmoqchisiz yoki qaysi mavzu tushunarsiz?": "Что хотите изучить или какая тема непонятна?"
+  "Nimani o‘rganmoqchisiz yoki qaysi mavzu tushunarsiz?": "Что хотите изучить или какая тема непонятна?",
+  "Uy vazifalari": "Домашние задания",
+  "Hozircha uy vazifasi yo‘q.": "Домашних заданий пока нет.",
+  "Vazifa": "Задание",
+  "Fayl yuborish": "Отправка файла",
+  "Vazifani yuklash uchun faylni tanlang max({n}mb)": "Выберите файл для загрузки задания, макс. {n} МБ",
+  "Fayl {n} MB dan katta bo‘lmasligi kerak.": "Файл не должен быть больше {n} МБ.",
+  "link joylang": "вставьте ссылку",
+  "Izoh qoldiring": "Оставьте комментарий",
+  "Yuklash": "Загрузить",
+  "Vazifa topshirildi. Mentor tekshiradi.": "Задание отправлено. Ментор проверит.",
+  "Vazifangiz mentor tekshiruvida.": "Ваше задание на проверке у ментора.",
+  "Bu vazifani endi topshirib bo‘lmaydi.": "Это задание больше нельзя сдать.",
+  "O‘chirish": "Удалить"
 }

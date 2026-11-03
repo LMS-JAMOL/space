@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Badge, Button, Card, EmptyState, ErrorState, PageHeader, Progress, Skeleton, SkeletonGrid, Tabs, cn } from '../../components/ui'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { courseService } from '../../services/courseService'
+import CourseHomework from './CourseHomework'
 import { useLanguage } from '../../context/LanguageContext'
 import type { CourseStatus } from '../../types'
 import { fill } from '../../utils/format'
@@ -84,6 +85,7 @@ export function CourseDetailPage() {
           ))}
         </Card>
       )}
+      <CourseHomework courseTitle={c.title} />
     </>
   )
 }
