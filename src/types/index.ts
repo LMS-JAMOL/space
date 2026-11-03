@@ -84,6 +84,14 @@ export interface Attachment {
 }
 
 export interface Work {
+  source?: 'homework'
+  description?: string
+  groupId?: string
+  groupName?: string | null
+  canSubmit?: boolean
+  needsAttention?: boolean
+  attempt?: number
+  maxAttempts?: number
   id: string
   title: string
   kind: 'portfolio' | 'plan' | 'assignment'
@@ -97,6 +105,9 @@ export interface Work {
 }
 
 export interface Submission {
+  link?: string | null
+  score?: number | null
+  attempt?: number
   id: string
   createdAt: string
   status: WorkStatus

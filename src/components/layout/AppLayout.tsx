@@ -18,6 +18,7 @@ export const NAV = [
   { to: '/main-page', label: 'Asosiy', icon: LayoutDashboard },
   { to: '/my-courses', label: 'Kurslarim', icon: BookOpen },
   { to: '/my-works', label: 'Mening ishlarim', icon: Briefcase },
+  { to: '/tutor-booking', label: 'Qo‘shimcha darslar', icon: BookOpen },
   { to: '/battle', label: 'Battle', icon: Swords },
   { to: '/hackathon', label: 'Xakaton', icon: Trophy },
   { to: '/edverse', label: 'Edverse', icon: Globe2 },
@@ -59,7 +60,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 function Stat({ icon, value, className, title }: { icon: React.ReactNode; value: string; className: string; title: string }) {
   return (
-    <div title={title} className={cn('flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-bold', className)}>
+    <div title={title} className={cn(!className.includes('hidden') && 'flex', 'h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-bold', className)}>
       {icon}{value}
     </div>
   )
@@ -159,13 +160,13 @@ export function AppLayout() {
         </div>
       )}
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
-        <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
+        <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:px-6">
           <button onClick={() => setDrawer(true)} className="rounded-lg p-2 text-muted hover:bg-canvas lg:hidden" aria-label={tr('Menyu')}><Menu className="size-5" /></button>
           <NavLink to="/main-page"><Logo /></NavLink>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             {me && (
               <>
-                <Stat title={tr('MARS Coin')} icon={<Coins className="size-4" />} value={fmtNum(me.coins)} className="bg-amber-50 text-amber-700" />
+                <Stat title={tr('MARS Coin')} icon={<Coins className="size-4" />} value={fmtNum(me.coins)} className="hidden sm:flex bg-amber-50 text-amber-700" />
                 <Stat title={tr('Streak')} icon={<Flame className="size-4" />} value={String(me.streak)} className="hidden sm:flex bg-mars-50 text-mars-600" />
                 <Stat title={tr('Ballar')} icon={<Gamepad2 className="size-4" />} value={fmtNum(me.points)} className="hidden md:flex bg-violet-50 text-violet-700" />
                 <Stat title={tr('Energiya')} icon={<Zap className="size-4" />} value={`${me.energy}/${me.maxEnergy}`} className="hidden md:flex bg-sky-50 text-sky-700" />

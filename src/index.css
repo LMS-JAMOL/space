@@ -371,6 +371,11 @@ body {
   transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
+@media (max-width: 639px) {
+  .lang-select { min-width: 0; gap: 4px; padding-inline: 8px; }
+  .lang-select > .lang-select__icon, .lang-select > .lang-flag { display: none; }
+}
+
 .lang-select:hover {
   border-color: rgba(255, 255, 255, 0.55);
   transform: translateY(-1px);

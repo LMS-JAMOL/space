@@ -15,6 +15,7 @@ import HackathonPage from '../pages/hackathon/HackathonPage'
 import PaymentPage from '../pages/payments/PaymentPage'
 import { OrdersPage, ProductRedirect, ShopPage } from '../pages/shop/ShopPage'
 import WorksPage from '../pages/works/WorksPage'
+import TutorPage from '../pages/tutor/TutorPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="my-courses" element={<CoursesPage />} />
             <Route path="my-courses/:courseId" element={<CourseDetailPage />} />
             <Route path="my-works" element={<WorksPage />} />
+            <Route path="tutor-booking" element={<TutorPage />} />
             <Route path="battle" element={<BattlePage />} />
             <Route path="hackathon" element={<HackathonPage />} />
             <Route path="edverse" element={<EdversePage />} />
