@@ -4,12 +4,9 @@
 // Nothing here proves that a backend feature works.
 
 import type {
-  BattleMatch,
-  BlogPost,
   Payment,
   Product,
   Purchase,
-  Work,
 } from '../types'
 import { db } from './data'
 
@@ -40,118 +37,16 @@ const routes: [string, RegExp, Handler][] = [
   }],
   ['GET', /^\/courses\/([^/]+)\/lessons$/, ([id]) => db.lessons(db.courses.find((x) => x.id === id)!)],
 
-  ['GET', /^\/works$/, (_, q) => (q?.kind ? db.works.filter((w) => w.kind === q.kind) : db.works)],
-  ['GET', /^\/works\/([^/]+)$/, ([id]) => db.works.find((w) => w.id === id)],
-  ['GET', /^\/works\/([^/]+)\/submissions$/, ([id]) => db.submissions[id] ?? []],
-  ['POST', /^\/works\/([^/]+)\/submissions$/, ([id], _, body) => {
-    const form = body as FormData
-    const files = form.getAll('files') as File[]
-    const sub = {
-      id: uid('sub'),
-      createdAt: now(),
-      status: 'submitted' as const,
-      comment: String(form.get('comment') ?? ''),
-      feedback: null,
-      attachments: files.map((f) => ({ id: uid('f'), name: f.name, url: '#', sizeBytes: f.size })),
-    }
-    db.submissions[id] = [sub, ...(db.submissions[id] ?? [])]
-    const w = db.works.find((x) => x.id === id) as Work
-    w.status = 'submitted'
-    w.submittedAt = sub.createdAt
-    return sub
+  // extra lessons: tutors on the next two days (dev-only data)
+  ['GET', /^\/tutor-booking$/, (_, q) => {
+    const tashkent = (offset: number) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' }).format(new Date(Date.now() + offset * 86400000))
+    const offset = [1, 2].find((o) => tashkent(o) === q?.day)
+    if (!offset) return []
+    const at = (h: number) => `${tashkent(offset)}T${String(h).padStart(2, '0')}:00:00+05:00`
+    const slot = (id: string, tutor: string, h: number, seatsLeft: number) => ({ id: `${id}${offset}`, dayId: `d${offset}`, tutor, course: 'Frontend', start: at(h), end: at(h + 1), seatsLeft, booked: false, canBook: true })
+    return [slot('a', 'Anvar Tutor', 10, 3), slot('b', 'Anvar Tutor', 15, 2), slot('c', 'Bobur Tutor', 12, 3)]
   }],
-
-  ['GET', /^\/battle\/profile$/, () => db.battleProfile],
-  ['GET', /^\/battle\/leaderboard$/, () => db.leaderboard],
-  ['GET', /^\/battle\/opponents$/, () => db.opponents],
-  ['GET', /^\/battle\/history$/, () => db.battleHistory],
-  ['POST', /^\/battle\/matches$/, (_, __, body) => {
-    const b = body as { opponentId?: string; language?: string; difficulty?: string }
-    if (db.activeMatch && ['searching', 'matched', 'in_progress'].includes(db.activeMatch.status)) {
-      throw new MockHttpError(409, 'Sizda tugallanmagan jang bor')
-    }
-    const m: BattleMatch = {
-      id: uid('m'),
-      status: 'searching',
-      language: b.language ?? null,
-      difficulty: b.difficulty ?? null,
-      opponent: b.opponentId ? db.opponents.find((o) => o.id === b.opponentId) ?? null : null,
-      createdAt: now(),
-    }
-    db.activeMatch = m
-    db.matchStartedAt = Date.now()
-    return m
-  }],
-  ['GET', /^\/battle\/matches\/([^/]+)$/, ([id]) => {
-    const m = db.activeMatch
-    if (!m || m.id !== id) throw new MockHttpError(404, 'Jang topilmadi')
-    if (m.status === 'searching' && Date.now() - db.matchStartedAt > 4000) {
-      m.status = 'matched'
-      m.opponent ??= db.opponents.find((o) => o.online) ?? db.opponents[0]
-    }
-    return m
-  }],
-  ['POST', /^\/battle\/matches\/([^/]+)\/cancel$/, ([id]) => {
-    const m = db.activeMatch
-    if (!m || m.id !== id) throw new MockHttpError(404, 'Jang topilmadi')
-    if (m.status !== 'searching') throw new MockHttpError(409, "Raqib topilgan — bekor qilib bo'lmaydi")
-    m.status = 'cancelled'
-    db.activeMatch = null
-    return m
-  }],
-
-  ['GET', /^\/hackathons$/, () => db.hackathons],
-  ['GET', /^\/hackathons\/([^/]+)$/, ([id]) => db.hackathons.find((h) => h.id === id)],
-  ['GET', /^\/hackathons\/([^/]+)\/teams$/, () => db.teams],
-  ['POST', /^\/hackathons\/([^/]+)\/teams$/, ([id], _, body) => {
-    const h = db.hackathons.find((x) => x.id === id)!
-    if (h.myTeamId) throw new MockHttpError(409, "Siz allaqachon jamoadasiz")
-    if (h.status !== 'registration') throw new MockHttpError(403, "Ro'yxatdan o'tish yopiq")
-    const b = body as { name: string; topic?: string }
-    const team = { id: uid('t'), name: b.name, topic: b.topic ?? null, isOpen: true,
-      members: [{ id: db.student.id, fullName: db.student.fullName, role: 'Kapitan' }] }
-    db.teams.unshift(team)
-    h.myTeamId = team.id
-    return team
-  }],
-  ['POST', /^\/hackathons\/([^/]+)\/join$/, ([id], _, body) => {
-    const h = db.hackathons.find((x) => x.id === id)!
-    if (h.myTeamId) throw new MockHttpError(409, 'Siz allaqachon jamoadasiz')
-    const team = db.teams.find((t) => t.id === (body as { teamId: string }).teamId)
-    if (!team || !team.isOpen || team.members.length >= h.maxTeamSize) throw new MockHttpError(409, "Jamoa to'lgan")
-    team.members.push({ id: db.student.id, fullName: db.student.fullName, role: "A'zo" })
-    h.myTeamId = team.id
-    return team
-  }],
-  ['GET', /^\/hackathons\/([^/]+)\/submissions$/, () => db.hackSubmissions],
-  ['POST', /^\/hackathons\/([^/]+)\/submissions$/, ([id], _, body) => {
-    const h = db.hackathons.find((x) => x.id === id)!
-    if (!h.myTeamId) throw new MockHttpError(403, "Avval jamoaga qo'shiling")
-    if (new Date(h.submissionDeadline) < new Date()) throw new MockHttpError(403, 'Topshirish muddati tugagan')
-    const team = db.teams.find((t) => t.id === h.myTeamId)!
-    const s = { id: uid('hs'), teamId: team.id, teamName: team.name, status: 'submitted' as const, submittedAt: now(),
-      ...(body as { projectTitle: string; repoUrl?: string; demoUrl?: string }) }
-    db.hackSubmissions = [s, ...db.hackSubmissions.filter((x) => x.teamId !== team.id)]
-    return s
-  }],
-  ['GET', /^\/hackathons\/([^/]+)\/results$/, ([id]) => (id === 'h_old' ? db.hackResults : [])],
-  ['GET', /^\/hackathons\/([^/]+)\/certificates$/, ([id]) =>
-    id === 'h_old' ? [{ id: 'c1', title: 'Ishtirokchi sertifikati', url: '#' }] : []],
-
-  ['GET', /^\/blog\/posts$/, (_, q) => {
-    const page = Number(q?.page ?? 1)
-    const size = Number(q?.pageSize ?? 9)
-    const s = String(q?.search ?? '').toLowerCase()
-    const list = db.posts.filter((p: BlogPost) =>
-      (!s || p.title.toLowerCase().includes(s)) && (!q?.category || p.category === q.category))
-    return { items: list.slice((page - 1) * size, page * size), page, pageSize: size, total: list.length,
-      categories: [...new Set(db.posts.map((p) => p.category!))] }
-  }],
-  ['GET', /^\/blog\/posts\/([^/]+)$/, ([id]) => {
-    const p = db.posts.find((x) => x.id === id)
-    if (!p) throw new MockHttpError(404, 'Maqola topilmadi')
-    return p
-  }],
+  ['POST', /^\/tutor-booking\/([^/]+)\/([^/]+)\/book$/, () => ({ booked: true })],
 
   ['GET', /^\/payments\/info$/, () => db.paymentInfo],
   ['GET', /^\/payments\/history$/, () => db.payments],
@@ -202,8 +97,6 @@ const routes: [string, RegExp, Handler][] = [
     if (n) n.read = true
   }],
 
-  ['GET', /^\/algo\/tasks$/, () => db.algoTasks],
-  ['GET', /^\/edverse$/, () => db.edverse],
 ]
 
 export async function mockAdapter<T>(method: string, path: string, query: Q, body: unknown): Promise<T> {

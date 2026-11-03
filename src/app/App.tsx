@@ -6,16 +6,10 @@ import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
 import { useLanguage } from '../context/LanguageContext'
 import { ApiError } from '../services/apiClient'
-import { AlgoPage, EdversePage } from '../pages/algo/AlgoEdversePages'
-import BattlePage from '../pages/battle/BattlePage'
-import { BlogPage, BlogPostPage } from '../pages/blog/BlogPage'
 import { CourseDetailPage, CoursesPage } from '../pages/courses/CoursesPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
-import HackathonPage from '../pages/hackathon/HackathonPage'
 import PaymentPage from '../pages/payments/PaymentPage'
 import { OrdersPage, ProductRedirect, ShopPage } from '../pages/shop/ShopPage'
-import TutorPage from '../pages/tutor/TutorPage'
-import WorksPage from '../pages/works/WorksPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,14 +40,6 @@ export default function App() {
             <Route path="main-page" element={<DashboardPage />} />
             <Route path="my-courses" element={<CoursesPage />} />
             <Route path="my-courses/:courseId" element={<CourseDetailPage />} />
-            <Route path="my-works" element={<WorksPage />} />
-            <Route path="tutor-booking" element={<TutorPage />} />
-            <Route path="battle" element={<BattlePage />} />
-            <Route path="hackathon" element={<HackathonPage />} />
-            <Route path="edverse" element={<EdversePage />} />
-            <Route path="algo" element={<AlgoPage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="blog/:postId" element={<BlogPostPage />} />
             <Route path="online-payment" element={<PaymentPage />} />
             <Route path="space-shop" element={<ShopPage />} />
             <Route path="space-shop/orders" element={<OrdersPage />} />

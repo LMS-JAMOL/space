@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Bell, BookOpen, Briefcase, Code2, Coins, Crown, Flame, Gamepad2, Globe2, LayoutDashboard, LogOut, Menu,
-  Newspaper, ShoppingBag, Swords, Trophy, Wallet, X, Zap,
+  Bell, BookOpen, Coins, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
+  ShoppingBag, Wallet, X, Zap,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -18,13 +18,6 @@ import { LangSwitcher } from './LangSwitcher'
 export const NAV = [
   { to: '/main-page', label: 'Asosiy', icon: LayoutDashboard },
   { to: '/my-courses', label: 'Kurslarim', icon: BookOpen },
-  { to: '/my-works', label: 'Mening ishlarim', icon: Briefcase },
-  { to: '/tutor-booking', label: 'Qo‘shimcha darslar', icon: BookOpen },
-  { to: '/battle', label: 'Battle', icon: Swords },
-  { to: '/hackathon', label: 'Xakaton', icon: Trophy },
-  { to: '/edverse', label: 'Edverse', icon: Globe2 },
-  { to: '/algo', label: 'Algo', icon: Code2 },
-  { to: '/blog', label: 'Blog', icon: Newspaper },
   { to: '/online-payment', label: "Onlayn to'lov", icon: Wallet },
   { to: '/space-shop', label: 'Space Shop', icon: ShoppingBag },
 ]
@@ -164,7 +157,6 @@ export function AppLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { data: me, error } = useMe()
-  const dark = pathname.startsWith('/battle')
 
   // Session genuinely dead (refresh failed too): drop the tokens and send the
   // user to the login screen instead of rendering the shell around a failing
@@ -180,7 +172,7 @@ export function AppLayout() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
   return (
-    <div className={cn('min-h-full', dark && 'bg-navy-950')}>
+    <div className="min-h-full">
       {USE_MOCKS && (
         <div className="bg-amber-400 px-4 py-1 text-center text-xs font-bold text-amber-950">
           {tr("DEV MOCK REJIMI — ma'lumotlar soxta, backend ulanmagan")} (VITE_USE_MOCKS=true)

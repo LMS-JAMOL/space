@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
 import { attendanceService } from '../../services/attendanceService'
+import TutorSection from './TutorSection'
 import { errorMessage } from '../../services/apiClient'
 import { useLanguage } from '../../context/LanguageContext'
 import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
@@ -62,6 +63,7 @@ export default function DashboardPage() {
         </div>
       )}
       <CheckinCard />
+      <TutorSection />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2 animate-fade-up">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gradient-to-br from-mars-200 to-mars-500 opacity-25 blur-2xl" />
@@ -128,7 +130,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <Card className="p-6">
-          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{tr('Vazifalar')}</h2><Link to="/my-works" className="text-sm font-semibold text-mars-600">{tr('Barchasi')}</Link></div>
+          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{tr('Vazifalar')}</h2></div>
           <div className="grid grid-cols-2 gap-3">
             {[['Jami', assignments.total, 'bg-canvas'], ['Kutilmoqda', assignments.pending, 'bg-amber-50 text-amber-700'], ['Tekshirildi', assignments.reviewed, 'bg-emerald-50 text-emerald-700'], ["Muddati o'tgan", assignments.overdue, 'bg-red-50 text-red-600']].map(([l, v, c]) => (
               <div key={l as string} className={cn('rounded-xl p-3', c as string)}><div className="text-2xl font-extrabold">{v}</div><div className="text-xs font-semibold opacity-80">{tr(l as string)}</div></div>
@@ -172,8 +174,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[['/battle', 'Battle', Swords], ['/hackathon', 'Xakaton', Trophy], ['/space-shop', 'Space Shop', ShoppingBag], ['/my-courses', 'Kurslarim', BookOpen]].map(([to, l, I]) => {
+      <div className="grid grid-cols-2 gap-3">
+        {[['/space-shop', 'Space Shop', ShoppingBag], ['/my-courses', 'Kurslarim', BookOpen]].map(([to, l, I]) => {
           const Icon = I as typeof Swords
           return (
             <Link key={to as string} to={to as string} className="group flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
