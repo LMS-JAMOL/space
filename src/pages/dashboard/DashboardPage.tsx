@@ -1,14 +1,43 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, BookOpen, CalendarClock, Check, Coins, Flame, Keyboard, Lock, PlayCircle, ShoppingBag, Swords, Trophy } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BookOpen, CalendarClock, Check, Coins, Flame, Keyboard, Lock, PlayCircle, ShoppingBag, Swords, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
+import { attendanceService } from '../../services/attendanceService'
+import TutorSection from './TutorSection'
+import { errorMessage } from '../../services/apiClient'
 import { useLanguage } from '../../context/LanguageContext'
-import { fill, fmtDateTime, fmtNum } from '../../utils/format'
+import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
+import { usePaymentInfo } from '../../components/layout/AppLayout'
+
+/** The student types the code the mentor shows in class: a second witness that he was at the lesson. */
+function CheckinCard() {
+  const { tr } = useLanguage()
+  const [code, setCode] = useState('')
+  const checkin = useMutation({ mutationFn: () => attendanceService.checkin(code), onSuccess: () => setCode('') })
+  const done = checkin.data?.checkin
+  return (
+    <Card className="p-5">
+      <h2 className="font-bold">{tr('Darsga kelganingizni tasdiqlang')}</h2>
+      <p className="mt-1 text-sm text-muted">{tr('Mentor darsda 6 xonali kod ko‘rsatadi — uni shu yerga kiriting.')}</p>
+      <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (/^\d{6}$/.test(code)) checkin.mutate() }}>
+        <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+          aria-label={tr('Davomat kodi')} placeholder="000000"
+          className="h-10 w-40 rounded-[10px] border border-line bg-white px-3 text-center font-mono text-lg tracking-[0.3em] outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
+        <Button type="submit" loading={checkin.isPending} disabled={!/^\d{6}$/.test(code)}>{tr('Tasdiqlash')}</Button>
+      </form>
+      {checkin.error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-600">{errorMessage(checkin.error)}</p>}
+      {done && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{done.repeated ? tr('Siz allaqachon tasdiqlagansiz') : tr('Tasdiqlandi')}{done.group ? ` — ${done.group}` : ''}</p>}
+    </Card>
+  )
+}
 
 export default function DashboardPage() {
   const { tr } = useLanguage()
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardService.get })
+  const wallet = usePaymentInfo().data?.wallet
 
   if (isLoading) return (
     <div className="grid gap-5 lg:grid-cols-3">
@@ -22,6 +51,19 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
+      {wallet?.warning && (
+        <div role="alert" className={cn('flex flex-wrap items-center gap-3 rounded-[10px] border px-4 py-3', wallet.warning === 'debt' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-300 bg-amber-50 text-amber-900')}>
+          <AlertTriangle className="size-5 shrink-0" />
+          <p className="min-w-0 flex-1 text-sm font-semibold">
+            {wallet.warning === 'debt'
+              ? fill(tr("Sizda {sum} qarz bor. Iltimos, to'lovni amalga oshiring."), { sum: fmtMoney(wallet.debt) })
+              : fill(tr("Oy oxiri yaqinlashmoqda: to'langan qoldiq {sum}. Keyingi oy darslari uchun to'lovni oldindan qiling."), { sum: fmtMoney(wallet.remaining) })}
+          </p>
+          <Link to="/online-payment"><Button size="sm">{tr("To'lash")}</Button></Link>
+        </div>
+      )}
+      <CheckinCard />
+      <TutorSection />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2 animate-fade-up">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gradient-to-br from-mars-200 to-mars-500 opacity-25 blur-2xl" />
@@ -88,7 +130,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <Card className="p-6">
-          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{tr('Vazifalar')}</h2><Link to="/my-works" className="text-sm font-semibold text-mars-600">{tr('Barchasi')}</Link></div>
+          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{tr('Vazifalar')}</h2></div>
           <div className="grid grid-cols-2 gap-3">
             {[['Jami', assignments.total, 'bg-canvas'], ['Kutilmoqda', assignments.pending, 'bg-amber-50 text-amber-700'], ['Tekshirildi', assignments.reviewed, 'bg-emerald-50 text-emerald-700'], ["Muddati o'tgan", assignments.overdue, 'bg-red-50 text-red-600']].map(([l, v, c]) => (
               <div key={l as string} className={cn('rounded-xl p-3', c as string)}><div className="text-2xl font-extrabold">{v}</div><div className="text-xs font-semibold opacity-80">{tr(l as string)}</div></div>
@@ -132,8 +174,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[['/battle', 'Battle', Swords], ['/hackathon', 'Xakaton', Trophy], ['/space-shop', 'Space Shop', ShoppingBag], ['/my-courses', 'Kurslarim', BookOpen]].map(([to, l, I]) => {
+      <div className="grid grid-cols-2 gap-3">
+        {[['/space-shop', 'Space Shop', ShoppingBag], ['/my-courses', 'Kurslarim', BookOpen]].map(([to, l, I]) => {
           const Icon = I as typeof Swords
           return (
             <Link key={to as string} to={to as string} className="group flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">

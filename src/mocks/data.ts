@@ -1,8 +1,7 @@
 // ⚠️ DEVELOPMENT-ONLY fake data for the mock adapter. Not real student data.
 import type {
-  AlgoTask, BattleMatch, BattleOpponent, BattleProfile, BlogPost, CourseSummary, Dashboard, EdverseItem,
-  Hackathon, HackathonResult, HackathonSubmission, HackathonTeam, LeaderboardEntry, Lesson, Notification,
-  Payment, PaymentInfo, Product, Purchase, ShopCategory, Student, Submission, Work,
+  CourseSummary, Dashboard, Lesson, Notification,
+  Payment, PaymentInfo, Product, Purchase, ShopCategory, Student,
 } from '../types'
 
 const art = (emoji: string, from: string, to: string) =>
@@ -36,81 +35,6 @@ const lessons = (c: CourseSummary): Lesson[] =>
     id: `${c.id}_l${i + 1}`, order: i + 1, title: topics[i % topics.length], durationMin: 90,
     status: i < c.lessonsDone ? 'done' : i === c.lessonsDone ? 'available' : 'locked',
   }))
-
-const works: Work[] = [
-  { id: 'w1', title: 'Landing page (Flex/Grid)', kind: 'assignment', courseTitle: 'Frontend Development', status: 'accepted', deadline: day(-10), submittedAt: day(-12), score: 92, mentorFeedback: 'Juda yaxshi! Adaptivlikni yana tekshiring.', attachments: [{ id: 'a1', name: 'landing.zip', url: '#', sizeBytes: 2_400_000 }] },
-  { id: 'w2', title: 'Todo app (DOM)', kind: 'assignment', courseTitle: 'Frontend Development', status: 'in_review', deadline: day(-1), submittedAt: day(-2), attachments: [{ id: 'a2', name: 'todo-app.zip', url: '#', sizeBytes: 840_000 }] },
-  { id: 'w3', title: 'Weather app (fetch API)', kind: 'assignment', courseTitle: 'Frontend Development', status: 'not_submitted', deadline: day(4), attachments: [] },
-  { id: 'w4', title: 'Kalkulyator', kind: 'assignment', courseTitle: 'Frontend Development', status: 'rejected', deadline: day(-6), submittedAt: day(-7), score: 40, mentorFeedback: "Edge-case'lar ishlamayapti: 0 ga bo'lish.", attachments: [{ id: 'a3', name: 'calc.zip', url: '#' }] },
-  { id: 'w5', title: 'Shaxsiy portfolio sayt', kind: 'portfolio', status: 'accepted', submittedAt: day(-30), attachments: [{ id: 'a4', name: 'portfolio-link.txt', url: '#' }] },
-  { id: 'w6', title: 'Oktabr oyi ish rejasi', kind: 'plan', status: 'submitted', submittedAt: day(-20), attachments: [] },
-]
-
-const submissions: Record<string, Submission[]> = {
-  w1: [{ id: 's1', createdAt: day(-12), status: 'accepted', comment: 'Tayyor', feedback: 'Juda yaxshi!', attachments: works[0].attachments }],
-  w4: [{ id: 's2', createdAt: day(-7), status: 'rejected', comment: '', feedback: "Edge-case'lar ishlamayapti.", attachments: works[3].attachments }],
-}
-
-const opponents: BattleOpponent[] = [
-  { id: 'p2', nickname: 'codeNinja', rating: 1420, online: true },
-  { id: 'p3', nickname: 'bitMaster', rating: 1385, online: true },
-  { id: 'p4', nickname: 'jsQueen', rating: 1510, online: false },
-  { id: 'p5', nickname: 'loopHero', rating: 1290, online: true },
-]
-
-const battleProfile: BattleProfile = {
-  playerId: 'st_1', nickname: 'aziz_dev', rating: 1398, wins: 34, losses: 19, streak: 3,
-  achievements: [
-    { id: 'ac1', title: 'Birinchi g\'alaba', icon: '🏆', earnedAt: day(-60) },
-    { id: 'ac2', title: '5 ketma-ket', icon: '🔥', earnedAt: day(-14) },
-    { id: 'ac3', title: 'Tezkor', icon: '⚡', earnedAt: day(-3) },
-  ],
-}
-
-const battleHistory: BattleMatch[] = [
-  { id: 'bm1', status: 'finished', result: 'win', ratingDelta: 18, opponent: opponents[1], language: 'JavaScript', difficulty: "O'rta", createdAt: day(-1, 16) },
-  { id: 'bm2', status: 'finished', result: 'loss', ratingDelta: -12, opponent: opponents[2], language: 'Python', difficulty: 'Qiyin', createdAt: day(-2, 18) },
-  { id: 'bm3', status: 'finished', result: 'win', ratingDelta: 15, opponent: opponents[3], language: 'JavaScript', difficulty: 'Oson', createdAt: day(-3, 11) },
-]
-
-const leaderboard: LeaderboardEntry[] = [
-  { rank: 1, playerId: 'p9', nickname: 'algoKing', rating: 1890 },
-  { rank: 2, playerId: 'p4', nickname: 'jsQueen', rating: 1510 },
-  { rank: 3, playerId: 'p2', nickname: 'codeNinja', rating: 1420 },
-  { rank: 4, playerId: 'st_1', nickname: 'aziz_dev', rating: 1398 },
-  { rank: 5, playerId: 'p3', nickname: 'bitMaster', rating: 1385 },
-]
-
-const hackathons: Hackathon[] = [
-  { id: 'h_fall', title: 'MARS Hack: Kuz 2026', description: "48 soatlik hakaton: ta'lim va ekologiya uchun web-ilovalar.", status: 'registration', startsAt: day(6), endsAt: day(8), submissionDeadline: day(8, 18), topics: ['EdTech', 'Eko-shahar', 'AI yordamchi'], maxTeamSize: 4, myTeamId: null },
-  { id: 'h_old', title: 'MARS Hack: Bahor 2026', description: "O'yin-ta'lim mavzusidagi hakaton.", status: 'finished', startsAt: day(-160), endsAt: day(-158), submissionDeadline: day(-158), topics: ['GameDev'], maxTeamSize: 4, myTeamId: 't_old' },
-]
-
-const teams: HackathonTeam[] = [
-  { id: 't1', name: 'Pixel Pioneers', topic: 'EdTech', isOpen: true, members: [{ id: 'u1', fullName: 'Madina S.', role: 'Kapitan' }, { id: 'u2', fullName: 'Jasur K.' }] },
-  { id: 't2', name: 'Green Code', topic: 'Eko-shahar', isOpen: true, members: [{ id: 'u3', fullName: 'Otabek N.', role: 'Kapitan' }] },
-  { id: 't3', name: 'NeuroKids', topic: 'AI yordamchi', isOpen: false, members: [{ id: 'u4', fullName: 'Lola M.' }, { id: 'u5', fullName: 'Islom T.' }, { id: 'u6', fullName: 'Kamron A.' }, { id: 'u7', fullName: 'Nodira B.' }] },
-]
-
-const hackSubmissions: HackathonSubmission[] = [
-  { id: 'hs1', teamId: 't3', teamName: 'NeuroKids', projectTitle: 'AI uy vazifa yordamchisi', repoUrl: 'https://github.com', demoUrl: null, status: 'submitted', submittedAt: day(-1) },
-]
-
-const hackResults: HackathonResult[] = [
-  { rank: 1, teamId: 'x1', teamName: 'Byte Riders', score: 94 },
-  { rank: 2, teamId: 't_old', teamName: 'Aziz & Co', score: 88 },
-  { rank: 3, teamId: 'x3', teamName: 'Game Lab', score: 81 },
-]
-
-const cats = ['Frontend', 'Karyera', 'MARS yangiliklari', 'Algoritmlar']
-const posts: BlogPost[] = Array.from({ length: 14 }, (_, i) => ({
-  id: `b${i + 1}`,
-  title: ['CSS Grid: 5 ta amaliy layout', 'Junior dasturchi portfoliosi', 'MARS Space yangi mavsum', 'Binary search sodda tilda', 'React hooks xatolari', 'Git workflow jamoada'][i % 6] + (i >= 6 ? ` #${i + 1}` : ''),
-  excerpt: "Qisqa va amaliy maqola: asosiy g'oyalar, misollar va keyingi qadamlar.",
-  content: "Bu maqola demo matn (mock). Haqiqiy kontent backend'dan keladi.\n\nBirinchi bo'lim — muammo. Ikkinchi bo'lim — yechim va misollar. Uchinchi bo'lim — xulosa.",
-  coverUrl: art(['🎨', '💼', '🚀', '🔍', '⚛️', '🌿'][i % 6], '#ffb38a', '#ff5a1f'),
-  category: cats[i % cats.length], author: 'MARS IT', publishedAt: day(-i * 3), readMinutes: 4 + (i % 5),
-}))
 
 const categories: ShopCategory[] = [
   { id: 'merch', name: 'Merch' }, { id: 'stationery', name: 'Kanselyariya' },
@@ -162,20 +86,7 @@ const dashboard: Omit<Dashboard, 'student'> = {
   typing: { bestWpm: 46, lastWpm: 41, accuracy: 94 },
 }
 
-const algoTasks: AlgoTask[] = [
-  { id: 'a1', title: 'Ikki son yig\'indisi', difficulty: 'easy', tags: ['array', 'hash'], solved: true, attempts: 1 },
-  { id: 'a2', title: 'Palindrom satr', difficulty: 'easy', tags: ['string'], solved: true, attempts: 2 },
-  { id: 'a3', title: 'Binary search', difficulty: 'medium', tags: ['search'], solved: false, attempts: 1 },
-  { id: 'a4', title: 'Qavslar balansi', difficulty: 'medium', tags: ['stack'], solved: false, attempts: 0 },
-  { id: 'a5', title: 'Eng uzun o\'suvchi ketma-ketlik', difficulty: 'hard', tags: ['dp'], solved: false, attempts: 0 },
-]
-
-const edverse: EdverseItem[] = []
-
 export const db = {
-  student, courses, lessons, works, submissions, opponents, battleProfile, battleHistory, leaderboard,
-  hackathons, teams, hackSubmissions, hackResults, posts, categories, products, purchases, payments,
-  paymentInfo, notifications, dashboard, algoTasks, edverse,
-  activeMatch: null as BattleMatch | null,
-  matchStartedAt: 0,
+  student, courses, lessons, categories, products, purchases, payments,
+  paymentInfo, notifications, dashboard,
 }
