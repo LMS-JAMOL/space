@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Bell, BookOpen, Coins, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
+  Bell, BookOpen, BookOpenCheck, Coins, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
   ShoppingBag, Wallet, X, Zap,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -18,6 +18,7 @@ import { LangSwitcher } from './LangSwitcher'
 export const NAV = [
   { to: '/main-page', label: 'Asosiy', icon: LayoutDashboard },
   { to: '/my-courses', label: 'Kurslarim', icon: BookOpen },
+  { to: '/quizzes', label: 'Quizlar', icon: BookOpenCheck },
   { to: '/online-payment', label: "Onlayn to'lov", icon: Wallet },
   { to: '/space-shop', label: 'Space Shop', icon: ShoppingBag },
 ]

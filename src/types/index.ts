@@ -105,6 +105,9 @@ export interface PaymentInfo {
   currency: string
   suggestedAmounts: number[]
   providers: string[]
+    upcomingPeriods?: { enrollment: string; period: string; groupName: string | null; dueAt: string; expected: number; paid: number; remaining: number }[]
+  enrollments?: { enrollment: string; group: string; groupName: string | null; status: 'ACTIVE' | 'INACTIVE' | 'FROZEN' | 'UNKNOWN' }[]
+  incompleteEnrollments?: string[]
 }
 
 export interface CheckoutResponse {

@@ -13,7 +13,7 @@ const fileHref = (url: string) => (url.startsWith('/') ? new URL(url, new URL(AP
 /**
  * Homework of a course, on the course page: every homework of the student's group for this course
  * with its status and a "Vazifa" button. The button opens the upload form (file, link, comment) and
- * the history of attempts with the mentor's score and feedback — the "Mening ishlarim" page is gone.
+ * the history of backend-checked attempts — the "Mening ishlarim" page is gone.
  */
 export default function CourseHomework({ courseTitle }: { courseTitle: string }) {
   const { tr } = useLanguage()
@@ -35,7 +35,6 @@ export default function CourseHomework({ courseTitle }: { courseTitle: string })
                   <p className="font-semibold">{h.title}</p>
                   <p className="flex flex-wrap items-center gap-x-3 text-xs text-muted">
                     {h.deadline && <span className="flex items-center gap-1"><CalendarDays className="size-3" />{tr('Muddat')}: {fmtDate(h.deadline)}</span>}
-                    {h.score != null && <span>{fill(tr('{n} ball'), { n: h.score })}</span>}
                   </p>
                 </div>
                 <StatusBadge status={h.status} />
@@ -87,8 +86,8 @@ function HomeworkModal({ work, onClose }: { work: Homework | null; onClose: () =
           {work.attempt > 0 && <span className="text-sm text-muted">{tr('Urinish')}: {work.attempt}</span>}
         </div>
         {work.description && <p className="whitespace-pre-wrap text-sm">{work.description}</p>}
-        {work.needsAttention && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{tr('Oddiy urinishlar tugadi. Mentor bilan bog‘laning.')}</p>}
-        {work.mentorFeedback && <div className="rounded-xl bg-canvas p-3 text-sm"><p className="mb-1 text-xs font-bold text-muted">{tr('Mentor')}{work.score != null && ` · ${fill(tr('{n} ball'), { n: work.score })}`}</p>{work.mentorFeedback}</div>}
+        {work.requirements?.length > 0 && <div className="rounded-xl bg-canvas p-3 text-sm"><p className="mb-1 font-semibold">{tr('Tekshiruv talablari')}</p><ul className="list-inside list-disc">{work.requirements.map((item) => <li key={item.key}>{item.label}</li>)}</ul></div>}
+        {work.results?.length > 0 && <div className="rounded-xl border border-line p-3 text-sm"><p className="mb-1 font-semibold">{tr('Oxirgi tekshiruv')}</p><ul className="space-y-1">{work.results.map((item, index) => <li key={`${item.label}-${index}`}>{item.passed ? '✓' : '✕'} {item.label}</li>)}</ul></div>}
 
         {work.canSubmit ? (
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (ready) submit.mutate() }}>
@@ -123,7 +122,7 @@ function HomeworkModal({ work, onClose }: { work: Homework | null; onClose: () =
               <p className="text-right text-xs text-muted">{comment.length} / 256</p>
             </div>
             {submit.error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{errorMessage(submit.error)}</p>}
-            {submit.isSuccess && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{tr('Vazifa topshirildi. Mentor tekshiradi.')}</p>}
+            {submit.isSuccess && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{tr('Vazifa topshirildi. Backend tekshiruvi yangilandi.')}</p>}
             <div className="flex justify-end"><Button type="submit" loading={submit.isPending} disabled={!ready}>{tr('Yuklash')}</Button></div>
           </form>
         ) : (
@@ -141,8 +140,7 @@ function HomeworkModal({ work, onClose }: { work: Homework | null; onClose: () =
                     {s.comment && <p className="mt-1">{s.comment}</p>}
                     {s.link && <a href={s.link} target="_blank" rel="noreferrer" className="block break-all underline">{s.link}</a>}
                     {s.attachments.map((a) => <a key={a.id} href={fileHref(a.url)} target="_blank" rel="noreferrer" className="block underline">{a.name}</a>)}
-                    {s.score != null && <p className="mt-1 font-semibold">{tr('Yakuniy ball')}: {s.score}</p>}
-                    {s.feedback && <p className="mt-1 text-muted">{tr('Mentor')}: {s.feedback}</p>}
+                    {s.results?.length > 0 && <ul className="mt-2 space-y-1 text-muted">{s.results.map((item, index) => <li key={`${item.label}-${index}`}>{item.passed ? '✓' : '✕'} {item.label}</li>)}</ul>}
                   </li>
                 ))}
               </ul>

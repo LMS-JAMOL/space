@@ -9,6 +9,7 @@ import { ApiError } from '../services/apiClient'
 import { CourseDetailPage, CoursesPage } from '../pages/courses/CoursesPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import PaymentPage from '../pages/payments/PaymentPage'
+import QuizPage from '../pages/quizzes/QuizPage'
 import { OrdersPage, ProductRedirect, ShopPage } from '../pages/shop/ShopPage'
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="my-courses" element={<CoursesPage />} />
             <Route path="my-courses/:courseId" element={<CourseDetailPage />} />
             <Route path="online-payment" element={<PaymentPage />} />
+            <Route path="quizzes" element={<QuizPage />} />
             <Route path="space-shop" element={<ShopPage />} />
             <Route path="space-shop/orders" element={<OrdersPage />} />
             <Route path="space-shop/products/:productId" element={<ProductRedirect />} />

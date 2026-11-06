@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Plus } from 'lucide-react'
 import { Button, Card, Modal, cn } from '../../components/ui'
 import { api, errorMessage } from '../../services/apiClient'
@@ -7,8 +7,9 @@ import { useLanguage } from '../../context/LanguageContext'
 
 type Slot = {
   id: string; dayId: string; tutor: string; course: string; start: string; end: string
-  seatsLeft: number; booked: boolean; canBook: boolean
+  seatsLeft: number; booked: boolean; canBook: boolean; cancelledNoShow?: boolean
 }
+type MyBooking = { id: string; dayId: string; tutor: string; course: string; start: string; end: string; topic: string; status: 'booked' | 'no_show'; attendance: 'present' | 'late' | null }
 
 const TZ = 'Asia/Tashkent'
 const SHORT_DAYS = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'] // Sunday is never offered
@@ -42,8 +43,9 @@ export default function TutorSection() {
   const [done, setDone] = useState<string | null>(null)
 
   const queries = useQueries({
-    queries: days.map((d) => ({ queryKey: ['tutor-slots', d.key], queryFn: () => api.get<Slot[]>('/tutor-booking', { day: d.key }) })),
+    queries: days.map((d) => ({ queryKey: ['tutor-slots', d.key], queryFn: () => api.get<Slot[]>('/tutor-booking', { day: d.key }), refetchInterval: 60_000 })),
   })
+  const myBookings = useQuery({ queryKey: ['tutor-mine'], queryFn: () => api.get<MyBooking[]>('/tutor-booking/mine'), refetchInterval: 60_000 })
   const slotsOf = (key: string) => queries[days.findIndex((d) => d.key === key)]?.data ?? []
 
   const reset = () => { setOpen(null); setTutor(null); setSlotId(null); setTopic('') }
@@ -53,7 +55,12 @@ export default function TutorSection() {
       setDone(`${s.tutor}, ${hhmm(s.start)} — ${hhmm(s.end)}`)
       reset()
       qc.invalidateQueries({ queryKey: ['tutor-slots'] })
+      qc.invalidateQueries({ queryKey: ['tutor-mine'] })
     },
+  })
+  const cancel = useMutation({
+    mutationFn: (s: MyBooking) => api.patch(`/tutor-booking/${s.dayId}/${s.id}/cancel`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tutor-slots'] }); qc.invalidateQueries({ queryKey: ['tutor-mine'] }) },
   })
 
   const slots = open ? slotsOf(open) : []
@@ -87,6 +94,14 @@ export default function TutorSection() {
         })}
       </div>
       {done && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{tr('Bron tasdiqlandi')}: {done}</p>}
+      <div className="mt-5 border-t border-line pt-4">
+        <h3 className="font-semibold">{tr('Mening bronlarim')}</h3>
+        {myBookings.isLoading ? <p className="mt-2 text-sm text-muted">{tr('Yuklanmoqda')}</p> : myBookings.error ? <p role="alert" className="mt-2 text-sm text-red-600">{errorMessage(myBookings.error)}</p> : !myBookings.data?.length ? <p className="mt-2 text-sm text-muted">{tr('Bronlar yo‘q')}</p> : <div className="mt-2 space-y-2">{myBookings.data.map((s) => <div key={`${s.dayId}:${s.id}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-3 text-sm">
+          <span className="min-w-0 flex-1"><strong>{s.tutor}</strong> · {s.course} · {dayKey(new Date(s.start))} {hhmm(s.start)}–{hhmm(s.end)}{s.topic ? ` · ${s.topic}` : ''}</span>
+          {s.status === 'no_show' ? <span className="text-amber-700">{tr('15 daqiqada kelmagani uchun bekor qilindi')}</span> : <><span>{s.attendance ? tr(s.attendance === 'late' ? 'Kechikdi' : 'Keldi') : tr('Yozilgansiz')}</span><Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => cancel.mutate(s)}>{tr('Bronni bekor qilish')}</Button></>}
+        </div>)}</div>}
+        {cancel.error && <p role="alert" className="mt-2 text-sm text-red-600">{errorMessage(cancel.error)}</p>}
+      </div>
 
       <Modal open={Boolean(open)} onClose={reset} title={day ? `${tr('Qo‘shimcha dars')} — ${tr(SHORT_DAYS[day.weekday])} ${day.date}` : tr('Qo‘shimcha dars')}
         footer={<Button disabled={!valid} loading={book.isPending} onClick={() => chosen && book.mutate(chosen)}><Check className="size-4" />{tr('Bronni tasdiqlash')}</Button>}>

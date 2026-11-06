@@ -15,11 +15,10 @@ export interface Homework {
   status: HomeworkStatus
   deadline: string | null
   submittedAt: string | null
-  mentorFeedback: string | null
-  score: number | null
   attempt: number
   canSubmit: boolean
-  needsAttention: boolean
+  requirements: { key: string; label: string }[]
+  results: { label: string; passed: boolean }[]
 }
 
 export interface HomeworkSubmission {
@@ -28,10 +27,9 @@ export interface HomeworkSubmission {
   status: HomeworkStatus
   comment: string | null
   link: string | null
-  feedback: string | null
-  score: number | null
   attempt: number
   attachments: HomeworkAttachment[]
+  results: { label: string; passed: boolean }[]
 }
 
 export const MAX_FILE_MB = 20 // the server refuses bigger files

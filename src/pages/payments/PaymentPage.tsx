@@ -21,6 +21,22 @@ export default function PaymentPage() {
     <>
       <PageHeader title={tr("Onlayn to'lov")} subtitle={tr("Kurs to'lovini xavfsiz amalga oshiring")} />
       {paymentId && <PaymentStatus id={paymentId} onClose={() => setParams({})} />}
+      {info.data?.upcomingPeriods?.length ? <Card className="mb-5 space-y-2 p-5"><h2 className="font-bold">{tr('Keyingi oylik to‘lovlar')}</h2>{info.data.upcomingPeriods.map((item) => <div key={`${item.enrollment}:${item.period}`} className="flex flex-wrap justify-between gap-2 border-b border-line py-2"><span>{item.groupName} · {fmtDateTime(item.dueAt)}</span><strong>{fmtMoney(item.remaining, 'UZS')}</strong></div>)}</Card> : null}
+      {info.data?.enrollments && info.data.enrollments.length > 0 && (
+        <Card className="mb-5 p-5">
+          <h2 className="mb-3 font-bold">{tr("Guruhlar bo‘yicha to‘lov holati")}</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {info.data.enrollments.map((item) => (
+              <div key={item.enrollment} className="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
+                <span className="font-medium">{item.groupName || item.group}</span>
+                <span className={cn('text-sm font-bold', item.status === 'ACTIVE' ? 'text-emerald-700' : item.status === 'INACTIVE' ? 'text-amber-700' : item.status === 'FROZEN' ? 'text-blue-700' : 'text-muted')}>
+                  {item.status === 'UNKNOWN' ? tr('Ma’lumot yetarli emas') : item.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
       <div className="grid gap-5 lg:grid-cols-5">
         <Card className="p-6 lg:col-span-2">
           {info.isLoading ? <Skeleton className="h-64" /> : info.error ? <ErrorState error={info.error} onRetry={info.refetch} /> : info.data && <Checkout data={info.data} />}
@@ -69,8 +85,20 @@ function Checkout({ data: d }: { data: PaymentInfo }) {
     })
     const valid = Number(amount) > 0 && !!provider
 
+    if (d.providers.length === 0) return (
+      <div className="space-y-4">
+        <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{tr('Onlayn to‘lov hozircha ulanmagan. To‘lov bo‘yicha filial adminiga murojaat qiling.')}</p>
+        <div className="flex gap-3">{['Click', 'Payme'].map((name) => <button key={name} type="button" disabled className="rounded-xl border border-line px-4 py-3 text-muted">{name} · {tr('Ulanmagan')}</button>)}</div>
+        {d.amountDue !== null && <div className="rounded-2xl bg-gradient-to-br from-ink to-navy-700 p-5 text-white">
+          <p className="text-sm text-navy-300">{tr("To'lanishi kerak")}</p>
+          <p className="text-3xl font-extrabold">{fmtMoney(d.amountDue, d.currency)}</p>
+        </div>}
+      </div>
+    )
+
     return (
       <form onSubmit={(e) => { e.preventDefault(); if (valid) checkout.mutate() }} className="space-y-5">
+        {d.providers.length === 0 && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{tr('Onlayn to‘lov hozircha ulanmagan. To‘lov bo‘yicha filial adminiga murojaat qiling.')}</p>}
         {d.amountDue !== null && (
           <div className="rounded-2xl bg-gradient-to-br from-ink to-navy-700 p-5 text-white">
             <p className="text-sm text-navy-300">{tr("To'lanishi kerak")}</p>
