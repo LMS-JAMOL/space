@@ -320,5 +320,18 @@
   "Vazifa topshirildi. Mentor tekshiradi.": "Задание отправлено. Ментор проверит.",
   "Vazifangiz mentor tekshiruvida.": "Ваше задание на проверке у ментора.",
   "Bu vazifani endi topshirib bo‘lmaydi.": "Это задание больше нельзя сдать.",
-  "O‘chirish": "Удалить"
+  "O‘chirish": "Удалить",
+  "QR eskirgan. Mentor ekranidagi yangi kodni skanerlang.": "QR-код устарел. Отсканируйте новый код на экране ментора.",
+  "Dars tugagan yoki hali boshlanmagan.": "Урок закончился или ещё не начался.",
+  "Filial Wi-Fi tarmog‘iga ulanib, qayta skanerlang.": "Подключитесь к Wi-Fi филиала и отсканируйте снова.",
+  "Bu telefon bu darsda boshqa o‘quvchini tasdiqlagan. O‘z telefoningizdan skanerlang.": "С этого телефона на уроке уже отметился другой ученик. Отсканируйте со своего телефона.",
+  "Siz bu dars guruhida emassiz.": "Вы не состоите в группе этого урока.",
+  "Bu MARS dars QR kodi emas.": "Это не QR-код урока MARS.",
+  "Kamera ishlamasa, mentorga ayting: filial Admini davomatni sabab bilan belgilaydi.": "Если камера не работает, скажите ментору: администратор филиала отметит посещаемость с указанием причины.",
+  "Tekshirilmoqda…": "Проверяем…",
+  "Kamerani ochib bo‘lmadi": "Не удалось открыть камеру",
+  "Mentor dars sahifasida ko‘rsatgan QR kodni skanerlang.": "Отсканируйте QR-код, который ментор показывает на странице урока.",
+  "QR skan qilish": "Сканировать QR",
+  "QR kod uchun kamera": "Камера для QR-кода",
+  "Kamerani yopish": "Закрыть камеру"
 }

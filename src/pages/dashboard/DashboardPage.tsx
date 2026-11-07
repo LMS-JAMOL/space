@@ -14,15 +14,28 @@ import { useLanguage } from '../../context/LanguageContext'
 import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
 import { usePaymentInfo } from '../../components/layout/AppLayout'
 
-/** The student scans the code shown on the mentor's lesson page. */
+// Server reasons a scan was refused, in the student's words.
+const CHECKIN_ERRORS: Record<string, string> = {
+  'Lesson QR has expired; scan the current code': 'QR eskirgan. Mentor ekranidagi yangi kodni skanerlang.',
+  'Lesson QR has expired': 'Dars tugagan yoki hali boshlanmagan.',
+  'Check in from the branch Wi-Fi': 'Filial Wi-Fi tarmog‘iga ulanib, qayta skanerlang.',
+  'This phone has already checked in another student for this lesson': 'Bu telefon bu darsda boshqa o‘quvchini tasdiqlagan. O‘z telefoningizdan skanerlang.',
+  'Student is not enrolled in this lesson group': 'Siz bu dars guruhida emassiz.',
+  'Invalid lesson QR code': 'Bu MARS dars QR kodi emas.',
+}
+
+/**
+ * The student scans the code shown on the mentor's lesson page. Camera only:
+ * a pasted code could be forwarded from the classroom to someone at home.
+ */
 function CheckinCard() {
   const { tr } = useLanguage()
-  const [code, setCode] = useState('')
   const [scanning, setScanning] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const controlsRef = useRef<{ stop: () => void } | null>(null)
-  const checkin = useMutation({ mutationFn: (value: string) => attendanceService.checkin(value), onSuccess: () => setCode('') })
+  const checkin = useMutation({ mutationFn: (value: string) => attendanceService.checkin(value) })
+  const failure = checkin.error ? errorMessage(checkin.error) : ''
   const done = checkin.data?.checkin
   useEffect(() => {
     if (!scanning || !videoRef.current) return
@@ -50,13 +63,9 @@ function CheckinCard() {
       <div className="mt-3"><Button type="button" onClick={() => { setCameraError(''); setScanning(true) }} disabled={scanning || checkin.isPending}><QrCode className="size-4" /> {tr('QR skan qilish')}</Button></div>
       {scanning && <div className="mt-3 space-y-2"><video ref={videoRef} className="max-h-64 w-full rounded-xl bg-black object-contain" muted playsInline aria-label={tr('QR kod uchun kamera')} /><Button type="button" variant="secondary" onClick={() => setScanning(false)}>{tr('Kamerani yopish')}</Button></div>}
       {cameraError && <p role="alert" className="mt-3 text-sm text-red-600">{cameraError}</p>}
-      <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (code.startsWith('mars-lesson:')) checkin.mutate(code.trim()) }}>
-        <input type="text" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)}
-          aria-label={tr('QR kod matni')} placeholder={tr('Kodni qo‘lda kiriting yoki joylang')}
-          className="h-10 min-w-0 flex-1 rounded-[10px] border border-line bg-white px-3 text-sm outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
-        <Button type="submit" variant="secondary" loading={checkin.isPending} disabled={!code.startsWith('mars-lesson:')}>{tr('Tasdiqlash')}</Button>
-      </form>
-      {checkin.error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-600">{errorMessage(checkin.error)}</p>}
+      {cameraError && <p className="mt-2 text-sm text-muted">{tr('Kamera ishlamasa, mentorga ayting: filial Admini davomatni sabab bilan belgilaydi.')}</p>}
+      {checkin.isPending && <p role="status" className="mt-3 text-sm text-muted">{tr('Tekshirilmoqda…')}</p>}
+      {failure && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-600">{CHECKIN_ERRORS[failure] ? tr(CHECKIN_ERRORS[failure]) : failure}</p>}
       {done && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{done.repeated ? tr('Siz allaqachon tasdiqlagansiz') : tr('Tasdiqlandi')}{done.group ? ` — ${done.group}` : ''}</p>}
     </Card>
   )
