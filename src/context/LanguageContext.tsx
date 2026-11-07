@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import ruPhrases from '../locales/ru.phrases.json'
-import { LANG_STORAGE_KEY, currentLanguage, type Lang } from './languageRuntime'
+import { LANG_STORAGE_KEY, currentLanguage, setRuntimeLang, type Lang } from './languageRuntime'
 
 export { trNow, localeNow, type Lang } from './languageRuntime'
 
@@ -26,6 +26,7 @@ const warnMissing = (str: string) => {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(currentLanguage)
+  setRuntimeLang(lang)
 
   useEffect(() => {
     try {
