@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, USE_MOCKS, clearTokens } from '../../services/apiClient'
+import { ApiError, clearTokens } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 import { notificationService } from '../../services/notificationService'
 import { fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
@@ -174,11 +174,6 @@ export function AppLayout() {
 
   return (
     <div className="min-h-full">
-      {USE_MOCKS && (
-        <div className="bg-amber-400 px-4 py-1 text-center text-xs font-bold text-amber-950">
-          {tr("DEV MOCK REJIMI — ma'lumotlar soxta, backend ulanmagan")} (VITE_USE_MOCKS=true)
-        </div>
-      )}
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
         <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:px-6">
           <button onClick={() => setDrawer(true)} className="rounded-lg p-2 text-muted hover:bg-canvas lg:hidden" aria-label={tr('Menyu')}><Menu className="size-5" /></button>
@@ -200,7 +195,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto bg-canvas p-3 lg:block" style={USE_MOCKS ? { top: 88 } : undefined}>
+      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto bg-canvas p-3 lg:block">
         <Sidebar />
       </aside>
 

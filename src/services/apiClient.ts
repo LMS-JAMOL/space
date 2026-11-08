@@ -2,9 +2,6 @@ import { trNow } from '../context/languageRuntime'
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 
-// Mocks are only reachable in `vite dev`; production builds always hit the real API.
-export const USE_MOCKS = import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true'
-
 // TODO(backend): the auth scheme is not confirmed. Assumes a bearer access token
 // stored by the existing login flow + cookie-based refresh at POST /auth/refresh.
 export const TOKEN_KEY = 'access_token'
@@ -128,11 +125,6 @@ async function parseError(res: Response): Promise<ApiError> {
 
 export async function request<T>(path: string, opts: RequestOptions = {}, retried = false): Promise<T> {
   const method = opts.method ?? 'GET'
-
-  if (USE_MOCKS) {
-    const { mockAdapter } = await import('../mocks/mockAdapter')
-    return mockAdapter<T>(method, path, opts.query, opts.body)
-  }
 
   const headers: Record<string, string> = { Accept: 'application/json' }
   const token = localStorage.getItem(TOKEN_KEY)
