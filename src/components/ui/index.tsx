@@ -107,8 +107,8 @@ export function SearchInput({ value, onChange, placeholder }: { value: string; o
   const { tr } = useLanguage()
   return (
     <label className="relative block w-full sm:w-72">
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? tr('Qidirish...')}
+      <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+      <input type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? tr('Qidirish...')} aria-label={placeholder ?? tr('Qidirish...')}
         className="h-10 w-full rounded-[10px] border border-line bg-white pl-9 pr-3 text-sm outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
     </label>
   )
@@ -129,10 +129,10 @@ export function Chips<T extends string>({ options, value, onChange, dark }: { op
   )
 }
 
-export function Select({ value, onChange, options, className }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string }) {
+export function Select({ value, onChange, options, className, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string; label?: string }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}
-      className={cn('h-10 rounded-[10px] border border-line bg-white px-3 text-sm font-medium outline-none focus:border-mars-400', className)}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}
+      className={cn('h-10 rounded-[10px] border border-line bg-white px-3 text-sm font-medium outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100', className)}>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   )

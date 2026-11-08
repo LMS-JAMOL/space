@@ -177,7 +177,7 @@ export function AppLayout() {
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
         <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:px-6">
           <button onClick={() => setDrawer(true)} className="rounded-lg p-2 text-muted hover:bg-canvas lg:hidden" aria-label={tr('Menyu')}><Menu className="size-5" /></button>
-          <NavLink to="/main-page"><Logo /></NavLink>
+          <NavLink to="/main-page" aria-label={tr('Asosiy sahifa')}><Logo /></NavLink>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             {me && (
               <>

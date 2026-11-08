@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpen, Paperclip } from 'lucide-react'
 import { Button, Card, Modal } from '../../components/ui'
@@ -13,6 +13,7 @@ export default function HomeworkSection() {
   const { tr } = useLanguage()
   const qc = useQueryClient()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const fieldId = useId()
   const [comment, setComment] = useState('')
   const [link, setLink] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -41,9 +42,9 @@ export default function HomeworkSection() {
         {selected.description && <p className="whitespace-pre-wrap text-sm">{selected.description}</p>}
         <p className="text-sm text-muted">{tr('Urinish')}: {selected.attempt}. {tr('Qayta topshirish limiti yo‘q.')}</p>
         {selected.canSubmit && <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); if (comment.trim() || link.trim() || file) submit.mutate() }}>
-          <label className="block text-sm font-medium">{tr('Javob')}<textarea className="mt-1 w-full rounded-xl border border-line p-3" rows={4} value={comment} onChange={(event) => setComment(event.target.value)} /></label>
-          <label className="block text-sm font-medium">{tr('Havola')}<input className="mt-1 w-full rounded-xl border border-line p-3" type="url" value={link} onChange={(event) => setLink(event.target.value)} /></label>
-          <label className="flex items-center gap-2 text-sm"><Paperclip className="size-4" />{tr('Fayl')}<input type="file" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label>
+          <label htmlFor={`${fieldId}-answer`} className="block text-sm font-medium">{tr('Javob')}<textarea id={`${fieldId}-answer`} className="mt-1 w-full rounded-xl border border-line p-3" rows={4} value={comment} onChange={(event) => setComment(event.target.value)} /></label>
+          <label htmlFor={`${fieldId}-link`} className="block text-sm font-medium">{tr('Havola')}<input id={`${fieldId}-link`} className="mt-1 w-full rounded-xl border border-line p-3" type="url" value={link} onChange={(event) => setLink(event.target.value)} /></label>
+          <label htmlFor={`${fieldId}-file`} className="flex items-center gap-2 text-sm"><Paperclip className="size-4" aria-hidden="true" />{tr('Fayl')}<input id={`${fieldId}-file`} type="file" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label>
           <Button type="submit" loading={submit.isPending} disabled={!comment.trim() && !link.trim() && !file}>{tr('Topshirish')}</Button>
           {submit.error && <p role="alert" className="text-sm text-red-600">{errorMessage(submit.error)}</p>}
         </form>}

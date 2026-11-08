@@ -68,7 +68,7 @@ export function ShopPage() {
         <Chips value={cat} onChange={setCat} options={[{ value: 'all', label: tr('Barchasi') }, ...(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))]} />
         <div className="flex gap-2">
           <SearchInput value={search} onChange={setSearch} placeholder={tr('Mahsulot qidirish...')} />
-          <Select value={sort} onChange={setSort} options={[{ value: 'popular', label: tr('Standart') }, { value: 'price_asc', label: tr('Arzon → qimmat') }, { value: 'price_desc', label: tr('Qimmat → arzon') }, { value: 'stock', label: tr('Mavjudlari') }]} />
+          <Select label={tr('Saralash')} value={sort} onChange={setSort} options={[{ value: 'popular', label: tr('Standart') }, { value: 'price_asc', label: tr('Arzon → qimmat') }, { value: 'price_desc', label: tr('Qimmat → arzon') }, { value: 'stock', label: tr('Mavjudlari') }]} />
         </div>
       </div>
       {products.isLoading ? <SkeletonGrid count={8} className="h-72" /> : products.error ? <ErrorState error={products.error} onRetry={products.refetch} />
@@ -80,16 +80,16 @@ export function ShopPage() {
               const cantAfford = balance.data ? balance.data.coins < p.price : false
               return (
                 <Card key={p.id} className="group flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lift animate-fade-up">
-                  <button onClick={() => setSelected(p)} className="relative overflow-hidden text-left">
+                  <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setSelected(p)} className="relative overflow-hidden text-left">
                     <ProductImage p={p} className={cn('aspect-[4/3] transition duration-500 group-hover:scale-105', out && 'grayscale opacity-60')} />
                     {out ? <Badge tone="gray" className="absolute left-3 top-3">{tr('Tugagan')}</Badge> : p.stock <= 3 && <Badge tone="red" className="absolute left-3 top-3">{fill(tr('{n} ta qoldi'), { n: p.stock })}</Badge>}
                   </button>
                   <div className="flex flex-1 flex-col p-3 sm:p-4">
-                    <button onClick={() => setSelected(p)} className="text-left text-sm sm:text-base font-bold hover:text-mars-600">{p.name}</button>
+                    <button type="button" onClick={() => setSelected(p)} className="min-h-6 text-left text-sm sm:text-base font-bold hover:text-mars-600">{p.name}</button>
                     <p className="mt-0.5 text-xs text-muted">{out ? tr('Mavjud emas') : fill(tr('Omborda: {n}'), { n: p.stock })}</p>
                     <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                       <span className="flex items-center gap-1 font-extrabold text-amber-600"><Coins className="size-4" />{fmtNum(p.price)}</span>
-                      <Button size="sm" disabled={out} onClick={() => setSelected(p)} title={cantAfford ? tr('Balans yetarli emas') : undefined}><ShoppingCart className="size-4" /><span className="hidden sm:inline">{tr('Olish')}</span></Button>
+                      <Button size="sm" disabled={out} onClick={() => setSelected(p)} aria-label={`${tr('Olish')}: ${p.name}`} title={cantAfford ? tr('Balans yetarli emas') : undefined}><ShoppingCart aria-hidden="true" className="size-4" /><span className="hidden sm:inline">{tr('Olish')}</span></Button>
                     </div>
                   </div>
                 </Card>
