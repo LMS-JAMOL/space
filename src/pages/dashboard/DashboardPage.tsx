@@ -6,12 +6,12 @@ import { useMutation } from '@tanstack/react-query'
 import { BrowserQRCodeReader } from '@zxing/browser'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
-import { attendanceService } from '../../services/attendanceService'
+import { attendanceService, type AttendanceMark } from '../../services/attendanceService'
 import TutorSection from './TutorSection'
 import HomeworkSection from './HomeworkSection'
 import { errorMessage } from '../../services/apiClient'
 import { useLanguage } from '../../context/LanguageContext'
-import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
+import { fill, fmtDate, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
 import { usePaymentInfo } from '../../components/layout/AppLayout'
 
 // Server reasons a scan was refused, in the student's words.
@@ -20,6 +20,11 @@ const CHECKIN_ERRORS: Record<string, string> = {
   'Lesson QR has expired': 'Dars tugagan yoki hali boshlanmagan.',
   'Check in from the branch Wi-Fi': 'Filial Wi-Fi tarmog‘iga ulanib, qayta skanerlang.',
   'This phone has already checked in another student for this lesson': 'Bu telefon bu darsda boshqa o‘quvchini tasdiqlagan. O‘z telefoningizdan skanerlang.',
+  'This device has already checked in another student for this lesson': 'Bu qurilma bu darsda boshqa o‘quvchini tasdiqlagan. O‘z qurilmangizdan belgilang.',
+  'Wrong or expired PIN': 'PIN noto‘g‘ri yoki eskirgan. Mentor ekranidagi yangi PIN’ni kiriting.',
+  'PIN must be 6 digits': 'PIN 6 ta raqamdan iborat.',
+  'No lesson of yours is in progress': 'Hozir sizning darsingiz davom etmayapti.',
+  'Too many wrong PINs for this lesson; scan the QR or ask the mentor': 'PIN ko‘p marta xato kiritildi. QR kodni skanerlang yoki mentorga ayting.',
   'Student is not enrolled in this lesson group': 'Siz bu dars guruhida emassiz.',
   'Invalid lesson QR code': 'Bu MARS dars QR kodi emas.',
 }
@@ -34,7 +39,12 @@ function CheckinCard() {
   const [cameraError, setCameraError] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const controlsRef = useRef<{ stop: () => void } | null>(null)
-  const checkin = useMutation({ mutationFn: (value: string) => attendanceService.checkin(value) })
+  const [pin, setPin] = useState('')
+  const checkin = useMutation({
+    mutationFn: (value: { code?: string; pin?: string }) =>
+      value.pin ? attendanceService.checkinWithPin(value.pin) : attendanceService.checkin(value.code ?? ''),
+    onSuccess: () => setPin(''),
+  })
   const failure = checkin.error ? errorMessage(checkin.error) : ''
   const done = checkin.data?.checkin
   useEffect(() => {
@@ -46,7 +56,7 @@ function CheckinCard() {
       cancelled = true
       controlsRef.current?.stop()
       setScanning(false)
-      checkin.mutate(result.getText())
+      checkin.mutate({ code: result.getText() })
     }).then((controls) => {
       if (cancelled) controls.stop()
       else controlsRef.current = controls
@@ -59,14 +69,68 @@ function CheckinCard() {
   return (
     <Card className="p-5">
       <h2 className="font-bold">{tr('Darsga kelganingizni tasdiqlang')}</h2>
-      <p className="mt-1 text-sm text-muted">{tr('Mentor dars sahifasida ko‘rsatgan QR kodni skanerlang.')}</p>
-      <div className="mt-3"><Button type="button" onClick={() => { setCameraError(''); setScanning(true) }} disabled={scanning || checkin.isPending}><QrCode className="size-4" /> {tr('QR skan qilish')}</Button></div>
+      <p className="mt-1 text-sm text-muted">{tr('Mentor ko‘rsatgan QR kodni skanerlang yoki uning yonidagi 6 xonali PIN kodni kiriting.')}</p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <Button type="button" onClick={() => { setCameraError(''); setScanning(true) }} disabled={scanning || checkin.isPending}><QrCode className="size-4" /> {tr('QR skan qilish')}</Button>
+        <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); if (/^\d{6}$/.test(pin)) checkin.mutate({ pin }) }}>
+          <label className="flex flex-col gap-1 text-xs font-semibold text-muted">
+            {tr('PIN kod')}
+            <input value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} placeholder="••••••"
+              className="h-10 w-32 rounded-[10px] border border-line bg-white px-3 text-center font-mono text-base tracking-[0.3em] text-ink outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
+          </label>
+          <Button type="submit" variant="secondary" disabled={pin.length !== 6 || checkin.isPending}><Keyboard className="size-4" /> {tr('Tasdiqlash')}</Button>
+        </form>
+      </div>
       {scanning && <div className="mt-3 space-y-2"><video ref={videoRef} className="max-h-64 w-full rounded-xl bg-black object-contain" muted playsInline aria-label={tr('QR kod uchun kamera')} /><Button type="button" variant="secondary" onClick={() => setScanning(false)}>{tr('Kamerani yopish')}</Button></div>}
       {cameraError && <p role="alert" className="mt-3 text-sm text-red-600">{cameraError}</p>}
-      {cameraError && <p className="mt-2 text-sm text-muted">{tr('Kamera ishlamasa, mentorga ayting: filial Admini davomatni sabab bilan belgilaydi.')}</p>}
+      {cameraError && <p className="mt-2 text-sm text-muted">{tr('Kamera ishlamasa, mentor ekranidagi PIN kodni kiriting.')}</p>}
       {checkin.isPending && <p role="status" className="mt-3 text-sm text-muted">{tr('Tekshirilmoqda…')}</p>}
       {failure && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-600">{CHECKIN_ERRORS[failure] ? tr(CHECKIN_ERRORS[failure]) : failure}</p>}
       {done && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{done.repeated ? tr('Siz allaqachon tasdiqlagansiz') : tr('Tasdiqlandi')}{done.group ? ` — ${done.group}` : ''}</p>}
+    </Card>
+  )
+}
+
+const MARK_TONE: Record<AttendanceMark['status'], string> = {
+  present: 'bg-emerald-50 text-emerald-700',
+  absent: 'bg-red-50 text-red-700',
+  unmarked: 'bg-slate-100 text-slate-600',
+}
+const fmtClock = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+
+/** Own confirmed attendance (finalized journals): date, arrival time, minutes late. */
+function MyAttendanceCard() {
+  const { tr } = useLanguage()
+  const { data, isLoading, error, refetch } = useQuery({ queryKey: ['my-attendance'], queryFn: attendanceService.history })
+  const marks = data?.attendance ?? []
+  const label = (m: AttendanceMark) => m.status === 'present'
+    ? (m.late ? (m.lateMinutes != null ? fill(tr('Kechikdi: {n} daqiqa'), { n: m.lateMinutes }) : tr('Kechikdi')) : tr('Keldi'))
+    : m.status === 'absent' ? tr('Kelmadi') : tr('Belgilanmagan')
+  return (
+    <Card className="p-5">
+      <h2 className="flex items-center gap-2 font-bold"><CalendarClock className="size-5 text-mars-600" aria-hidden="true" />{tr('Mening davomatim')}</h2>
+      <p className="mt-1 text-sm text-muted">{tr('Mentor yakunlagan darslar. Belgi xato bo‘lsa, mentorga murojaat qiling.')}</p>
+      {isLoading && <div className="mt-3 space-y-2"><Skeleton className="h-9" /><Skeleton className="h-9" /></div>}
+      {error && <div className="mt-3"><ErrorState error={error} onRetry={refetch} /></div>}
+      {!isLoading && !error && marks.length === 0 && <p className="mt-3 rounded-xl bg-canvas p-3 text-sm text-muted">{tr('Hali yakunlangan darslar yo‘q.')}</p>}
+      {marks.length > 0 && (
+        <ul className="mt-3 divide-y divide-line">
+          {marks.slice(0, 10).map((m) => (
+            <li key={m.attendanceId} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+              <span className="min-w-0">
+                <span className="font-semibold">{fmtDate(m.lessonStartsAt || m.date)}</span>
+                <span className="text-muted"> · {m.group?.name ?? '—'}</span>
+                {m.lessonStartsAt && <span className="block text-xs text-muted">
+                  {fill(tr('Dars {start}'), { start: fmtClock(m.lessonStartsAt) })}
+                  {m.arrivedAt ? ` · ${fill(tr('kelgan {time}'), { time: fmtClock(m.arrivedAt) })}` : ''}
+                </span>}
+              </span>
+              <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', m.status === 'present' && m.late ? 'bg-amber-50 text-amber-800' : MARK_TONE[m.status])}>{label(m)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   )
 }
@@ -99,7 +163,10 @@ export default function DashboardPage() {
           <Link to="/online-payment"><Button size="sm">{tr("To'lash")}</Button></Link>
         </div>
       )}
-      <CheckinCard />
+      <div className="grid gap-5 lg:grid-cols-2">
+        <CheckinCard />
+        <MyAttendanceCard />
+      </div>
       <TutorSection />
       <HomeworkSection />
       <div className="grid gap-5 lg:grid-cols-3">

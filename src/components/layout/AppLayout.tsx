@@ -92,7 +92,11 @@ function Notifications() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const qc = useQueryClient()
-  const { data } = useQuery({ queryKey: ['notifications'], queryFn: notificationService.list })
+  const { data } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: notificationService.list,
+    refetchInterval: 10_000,
+  })
   const read = useMutation({
     mutationFn: notificationService.markRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
@@ -116,8 +120,16 @@ function Notifications() {
             {!data?.length && <p className="p-6 text-center text-sm text-muted">{tr("Bildirishnomalar yo'q")}</p>}
             {data?.map((n) => (
               <button key={n.id} onClick={() => !n.read && read.mutate(n.id)} className={cn('block w-full px-4 py-3 text-left hover:bg-canvas', !n.read && 'bg-mars-50/50')}>
-                <div className="flex items-center gap-2 text-sm font-semibold">{!n.read && <span className="size-2 rounded-full bg-mars-500" />}{n.title}</div>
-                <div className="text-xs text-muted">{n.body} · {fmtDateTime(n.createdAt)}</div>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  {!n.read && <span className="size-2 rounded-full bg-mars-500" />}
+                  {n.type === 'coin' && <Coins className="size-4 shrink-0 text-amber-600" />}
+                  {n.type === 'coin'
+                    ? tr('Mentor sizga {amount} coin berdi').replace('{amount}', fmtNum(n.data?.amount ?? 0))
+                    : n.title}
+                </div>
+                <div className="text-xs text-muted">
+                  {n.type === 'coin' ? `${tr('Guruh')}: ${n.body}` : n.body} · {fmtDateTime(n.createdAt)}
+                </div>
               </button>
             ))}
           </div>

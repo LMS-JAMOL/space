@@ -147,6 +147,8 @@ export interface Notification {
   id: string
   title: string
   body: string
+  type?: string
+  data?: { amount?: number } | null
   createdAt: string
   read: boolean
 }
