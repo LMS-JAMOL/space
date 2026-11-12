@@ -4,7 +4,7 @@ React 19 + TypeScript + Vite + Tailwind v4 + React Router 7 + TanStack Query + L
 
 ```bash
 npm install
-cp .env.example .env.local   # VITE_USE_MOCKS=true → dev-only mock adapter
+cp .env.example .env         # VITE_API_URL → https://mars-backend-uvh8.onrender.com
 npm run dev
 npm run build
 ```
@@ -12,7 +12,6 @@ npm run build
 ## Structure
 - `src/services/apiClient.ts` — shared fetch client: base URL from env, bearer token, 401 → refresh, `ApiError`, Idempotency-Key.
 - `src/services/*Service.ts` — one module per domain (dashboard, courses, works, battle, hackathon, blog, payments, shop, notifications, edverse, algo).
-- `src/mocks/` — **DEV ONLY** mock adapter. Active only when `import.meta.env.DEV && VITE_USE_MOCKS=true`; excluded from production builds. A yellow banner is shown while mocks are on.
 - `src/components/ui` — design system (Button, Card, Modal, Badge, Tabs, Table, Pagination, Skeleton, Empty/Error states…).
 - `src/components/layout/AppLayout.tsx` — navbar (coins, streak, points, energy, premium, notifications, profile) + sidebar / mobile drawer.
 - `src/pages/*` — all routes: `/main-page`, `/my-courses(/:id)`, `/my-works`, `/battle`, `/hackathon`, `/edverse`, `/algo`, `/blog(/:id)`, `/online-payment`, `/space-shop`, `/space-shop/orders`.

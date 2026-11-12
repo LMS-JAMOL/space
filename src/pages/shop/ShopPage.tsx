@@ -7,17 +7,19 @@ import { StatusBadge } from '../../components/ui/StatusBadge'
 import { ApiError, errorMessage } from '../../services/apiClient'
 import { shopService } from '../../services/shopService'
 import type { Product, Purchase } from '../../types'
-import { assetUrl, fmtDateTime, fmtNum, newIdempotencyKey } from '../../utils/format'
+import { useLanguage } from '../../context/LanguageContext'
+import { assetUrl, fill, fmtDateTime, fmtNum, newIdempotencyKey } from '../../utils/format'
 
 function useBalance() {
   return useQuery({ queryKey: ['shop', 'balance'], queryFn: shopService.balance })
 }
 
 function BalanceCard() {
+  const { tr } = useLanguage()
   const { data, isLoading } = useBalance()
   return (
     <div className="flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-mars-500 px-4 text-sm font-extrabold text-white shadow-md shadow-mars-500/30">
-      <Coins className="size-4" />{isLoading ? '…' : data ? fmtNum(data.coins) : '—'} MARS Coin
+      <Coins className="size-4" />{isLoading ? '…' : data ? fmtNum(data.coins) : '—'} {tr('MARS Coin')}
     </div>
   )
 }
@@ -40,6 +42,7 @@ function OrderThumb({ src }: { src?: string | null }) {
 }
 
 export function ShopPage() {
+  const { tr } = useLanguage()
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('all')
   const [sort, setSort] = useState('popular')
@@ -59,17 +62,17 @@ export function ShopPage() {
 
   return (
     <>
-      <PageHeader title="Space Shop" subtitle="MARS Coin evaziga sovg'alar"
-        actions={<><BalanceCard /><Link to="/space-shop/orders"><Button variant="secondary"><ShoppingBag className="size-4" />Buyurtmalarim</Button></Link></>} />
+      <PageHeader title={tr('Space Shop')} subtitle={tr("MARS Coin evaziga sovg'alar")}
+        actions={<><BalanceCard /><Link to="/space-shop/orders"><Button variant="secondary"><ShoppingBag className="size-4" />{tr('Buyurtmalarim')}</Button></Link></>} />
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Chips value={cat} onChange={setCat} options={[{ value: 'all', label: 'Barchasi' }, ...(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))]} />
+        <Chips value={cat} onChange={setCat} options={[{ value: 'all', label: tr('Barchasi') }, ...(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))]} />
         <div className="flex gap-2">
-          <SearchInput value={search} onChange={setSearch} placeholder="Mahsulot qidirish..." />
-          <Select value={sort} onChange={setSort} options={[{ value: 'popular', label: 'Standart' }, { value: 'price_asc', label: 'Arzon → qimmat' }, { value: 'price_desc', label: 'Qimmat → arzon' }, { value: 'stock', label: 'Mavjudlari' }]} />
+          <SearchInput value={search} onChange={setSearch} placeholder={tr('Mahsulot qidirish...')} />
+          <Select label={tr('Saralash')} value={sort} onChange={setSort} options={[{ value: 'popular', label: tr('Standart') }, { value: 'price_asc', label: tr('Arzon → qimmat') }, { value: 'price_desc', label: tr('Qimmat → arzon') }, { value: 'stock', label: tr('Mavjudlari') }]} />
         </div>
       </div>
       {products.isLoading ? <SkeletonGrid count={8} className="h-72" /> : products.error ? <ErrorState error={products.error} onRetry={products.refetch} />
-        : list.length === 0 ? <EmptyState title="Mahsulot topilmadi" text="Qidiruv yoki filtrni o'zgartiring." icon={<ShoppingBag />} />
+        : list.length === 0 ? <EmptyState title={tr('Mahsulot topilmadi')} text={tr("Qidiruv yoki filtrni o'zgartiring.")} icon={<ShoppingBag />} />
         : (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {list.map((p) => {
@@ -77,16 +80,16 @@ export function ShopPage() {
               const cantAfford = balance.data ? balance.data.coins < p.price : false
               return (
                 <Card key={p.id} className="group flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lift animate-fade-up">
-                  <button onClick={() => setSelected(p)} className="relative overflow-hidden text-left">
+                  <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setSelected(p)} className="relative overflow-hidden text-left">
                     <ProductImage p={p} className={cn('aspect-[4/3] transition duration-500 group-hover:scale-105', out && 'grayscale opacity-60')} />
-                    {out ? <Badge tone="gray" className="absolute left-3 top-3">Tugagan</Badge> : p.stock <= 3 && <Badge tone="red" className="absolute left-3 top-3">{p.stock} ta qoldi</Badge>}
+                    {out ? <Badge tone="gray" className="absolute left-3 top-3">{tr('Tugagan')}</Badge> : p.stock <= 3 && <Badge tone="red" className="absolute left-3 top-3">{fill(tr('{n} ta qoldi'), { n: p.stock })}</Badge>}
                   </button>
                   <div className="flex flex-1 flex-col p-3 sm:p-4">
-                    <button onClick={() => setSelected(p)} className="text-left text-sm sm:text-base font-bold hover:text-mars-600">{p.name}</button>
-                    <p className="mt-0.5 text-xs text-muted">{out ? 'Mavjud emas' : `Omborda: ${p.stock}`}</p>
+                    <button type="button" onClick={() => setSelected(p)} className="min-h-6 text-left text-sm sm:text-base font-bold hover:text-mars-600">{p.name}</button>
+                    <p className="mt-0.5 text-xs text-muted">{out ? tr('Mavjud emas') : fill(tr('Omborda: {n}'), { n: p.stock })}</p>
                     <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                       <span className="flex items-center gap-1 font-extrabold text-amber-600"><Coins className="size-4" />{fmtNum(p.price)}</span>
-                      <Button size="sm" disabled={out} onClick={() => setSelected(p)} title={cantAfford ? 'Balans yetarli emas' : undefined}><ShoppingCart className="size-4" /><span className="hidden sm:inline">Olish</span></Button>
+                      <Button size="sm" disabled={out} onClick={() => setSelected(p)} aria-label={`${tr('Olish')}: ${p.name}`} title={cantAfford ? tr('Balans yetarli emas') : undefined}><ShoppingCart aria-hidden="true" className="size-4" /><span className="hidden sm:inline">{tr('Olish')}</span></Button>
                     </div>
                   </div>
                 </Card>
@@ -100,6 +103,7 @@ export function ShopPage() {
 }
 
 function ProductModal({ productId, initial, onClose }: { productId: string; initial: Product; onClose: () => void }) {
+  const { tr } = useLanguage()
   const qc = useQueryClient()
   const [confirming, setConfirming] = useState(false)
   const idemKey = useRef(newIdempotencyKey())
@@ -121,36 +125,36 @@ function ProductModal({ productId, initial, onClose }: { productId: string; init
   const errStatus = purchase.error instanceof ApiError ? purchase.error.status : null
 
   if (purchase.isSuccess) return (
-    <Modal open onClose={onClose} title="Buyurtma qabul qilindi">
+    <Modal open onClose={onClose} title={tr('Buyurtma qabul qilindi')}>
       <div className="py-4 text-center">
         <CheckCircle2 className="mx-auto mb-3 size-14 text-emerald-500" />
         <p className="font-bold">{purchase.data.productName}</p>
-        <p className="text-sm text-muted">Buyurtma #{purchase.data.id} · {fmtNum(purchase.data.totalPrice)} coin</p>
+        <p className="text-sm text-muted">{tr('Buyurtma')} #{purchase.data.id} · {fmtNum(purchase.data.totalPrice)} {tr('coin')}</p>
         <div className="mt-2"><StatusBadge status={purchase.data.status} /></div>
-        <div className="mt-6 flex justify-center gap-2"><Button variant="secondary" onClick={onClose}>Yopish</Button><Link to="/space-shop/orders"><Button>Buyurtmalarim</Button></Link></div>
+        <div className="mt-6 flex justify-center gap-2"><Button variant="secondary" onClick={onClose}>{tr('Yopish')}</Button><Link to="/space-shop/orders"><Button>{tr('Buyurtmalarim')}</Button></Link></div>
       </div>
     </Modal>
   )
 
   return (
-    <Modal open onClose={onClose} title={confirming ? 'Xaridni tasdiqlash' : p.name} size="lg"
+    <Modal open onClose={onClose} title={confirming ? tr('Xaridni tasdiqlash') : p.name} size="lg"
       footer={confirming ? (
-        <><Button variant="ghost" disabled={purchase.isPending} onClick={() => { setConfirming(false); purchase.reset() }}>Orqaga</Button>
-          <Button loading={purchase.isPending} disabled={out || insufficient} onClick={() => purchase.mutate()}>Tasdiqlash</Button></>
+        <><Button variant="ghost" disabled={purchase.isPending} onClick={() => { setConfirming(false); purchase.reset() }}>{tr('Orqaga')}</Button>
+          <Button loading={purchase.isPending} disabled={out || insufficient} onClick={() => purchase.mutate()}>{tr('Tasdiqlash')}</Button></>
       ) : (
-        <Button disabled={out || insufficient} onClick={() => setConfirming(true)}><ShoppingCart className="size-4" />{out ? 'Tugagan' : insufficient ? 'Balans yetarli emas' : 'Sotib olish'}</Button>
+        <Button disabled={out || insufficient} onClick={() => setConfirming(true)}><ShoppingCart className="size-4" />{out ? tr('Tugagan') : insufficient ? tr('Balans yetarli emas') : tr('Sotib olish')}</Button>
       )}>
       {confirming ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-4 rounded-2xl bg-canvas p-3"><ProductImage p={p} className="size-16 rounded-xl" /><div><p className="font-bold">{p.name}</p><p className="text-sm text-muted">1 dona</p></div></div>
+          <div className="flex items-center gap-4 rounded-2xl bg-canvas p-3"><ProductImage p={p} className="size-16 rounded-xl" /><div><p className="font-bold">{p.name}</p><p className="text-sm text-muted">{tr('1 dona')}</p></div></div>
           <div className="space-y-1 rounded-2xl border border-line p-4 text-sm">
-            <div className="flex justify-between"><span className="text-muted">Narx</span><b>{fmtNum(p.price)} coin</b></div>
-            <div className="flex justify-between"><span className="text-muted">Joriy balans</span><b>{balance.data ? fmtNum(balance.data.coins) : '—'} coin</b></div>
+            <div className="flex justify-between"><span className="text-muted">{tr('Narx')}</span><b>{fmtNum(p.price)} {tr('coin')}</b></div>
+            <div className="flex justify-between"><span className="text-muted">{tr('Joriy balans')}</span><b>{balance.data ? fmtNum(balance.data.coins) : '—'} {tr('coin')}</b></div>
           </div>
-          <p className="text-xs text-muted">Yakuniy narx va balans server tomonidan tekshiriladi. Coin faqat server tasdiqlagandan keyin yechiladi.</p>
+          <p className="text-xs text-muted">{tr('Yakuniy narx va balans server tomonidan tekshiriladi. Coin faqat server tasdiqlagandan keyin yechiladi.')}</p>
           {purchase.error && (
             <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-600">
-              {errStatus === 402 ? "Balansda yetarli MARS Coin yo'q." : errStatus === 409 ? 'Mahsulot qolmagan yoki holati o\'zgardi.' : errorMessage(purchase.error)}
+              {errStatus === 402 ? tr("Balansda yetarli MARS Coin yo'q.") : errStatus === 409 ? tr("Mahsulot qolmagan yoki holati o'zgardi.") : errorMessage(purchase.error)}
             </p>
           )}
         </div>
@@ -162,10 +166,10 @@ function ProductModal({ productId, initial, onClose }: { productId: string; init
           </div>
           <div>
             <p className="flex items-center gap-1.5 text-2xl font-extrabold text-amber-600"><Coins className="size-6" />{fmtNum(p.price)}</p>
-            <div className="mt-2">{out ? <Badge tone="gray"><PackageX className="size-3" />Tugagan</Badge> : <Badge tone="green">Omborda: {p.stock}</Badge>}</div>
+            <div className="mt-2">{out ? <Badge tone="gray"><PackageX className="size-3" />{tr('Tugagan')}</Badge> : <Badge tone="green">{fill(tr('Omborda: {n}'), { n: p.stock })}</Badge>}</div>
             <p className="mt-4 text-sm leading-relaxed text-muted">{p.description}</p>
-            {insufficient && !out && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Yana {fmtNum(p.price - (balance.data?.coins ?? 0))} coin kerak.</p>}
-            {product.error && <p className="mt-3 text-xs text-red-600">Yangilab bo'lmadi: {errorMessage(product.error)}</p>}
+            {insufficient && !out && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">{fill(tr('Yana {n} coin kerak.'), { n: fmtNum(p.price - (balance.data?.coins ?? 0)) })}</p>}
+            {product.error && <p className="mt-3 text-xs text-red-600">{tr("Yangilab bo'lmadi")}: {errorMessage(product.error)}</p>}
           </div>
         </div>
       )}
@@ -174,15 +178,16 @@ function ProductModal({ productId, initial, onClose }: { productId: string; init
 }
 
 export function OrdersPage() {
+  const { tr } = useLanguage()
   const orders = useQuery({ queryKey: ['shop', 'purchases'], queryFn: shopService.purchases })
   const [selected, setSelected] = useState<Purchase | null>(null)
   return (
     <>
-      <Link to="/space-shop" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink"><ArrowLeft className="size-4" />Space Shop</Link>
-      <PageHeader title="Buyurtmalarim" subtitle="Xaridlar tarixi va holati" actions={<BalanceCard />} />
+      <Link to="/space-shop" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink"><ArrowLeft className="size-4" />{tr('Space Shop')}</Link>
+      <PageHeader title={tr('Buyurtmalarim')} subtitle={tr('Xaridlar tarixi va holati')} actions={<BalanceCard />} />
       {orders.isLoading ? <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}</div>
         : orders.error ? <ErrorState error={orders.error} onRetry={orders.refetch} />
-        : !orders.data?.length ? <EmptyState title="Buyurtmalar yo'q" text="Birinchi sovg'angizni tanlang!" icon={<ShoppingBag />} action={<Link to="/space-shop"><Button>Do'konga o'tish</Button></Link>} />
+        : !orders.data?.length ? <EmptyState title={tr("Buyurtmalar yo'q")} text={tr("Birinchi sovg'angizni tanlang!")} icon={<ShoppingBag />} action={<Link to="/space-shop"><Button>{tr("Do'konga o'tish")}</Button></Link>} />
         : (
           <Card className="divide-y divide-line">
             {orders.data.map((o) => (
@@ -201,14 +206,15 @@ export function OrdersPage() {
 }
 
 function OrderModal({ id, initial, onClose }: { id: string; initial: Purchase; onClose: () => void }) {
+  const { tr } = useLanguage()
   const { data: o } = useQuery({ queryKey: ['shop', 'purchase', id], queryFn: () => shopService.purchaseById(id), initialData: initial })
   return (
-    <Modal open onClose={onClose} title={`Buyurtma #${o.id}`}>
+    <Modal open onClose={onClose} title={`${tr('Buyurtma')} #${o.id}`}>
       <div className="space-y-2 text-sm">
-        {[['Mahsulot', o.productName], ['Soni', o.quantity], ['Jami', `${fmtNum(o.totalPrice)} coin`], ['Sana', fmtDateTime(o.createdAt)]].map(([l, v]) => (
-          <div key={l as string} className="flex justify-between border-b border-line pb-2"><span className="text-muted">{l}</span><b>{v}</b></div>
+        {[['Mahsulot', o.productName], ['Soni', o.quantity], ['Jami', `${fmtNum(o.totalPrice)} ${tr('coin')}`], ['Sana', fmtDateTime(o.createdAt)]].map(([l, v]) => (
+          <div key={l as string} className="flex justify-between border-b border-line pb-2"><span className="text-muted">{tr(l as string)}</span><b>{v}</b></div>
         ))}
-        <div className="flex justify-between"><span className="text-muted">Holat</span><StatusBadge status={o.status} /></div>
+        <div className="flex justify-between"><span className="text-muted">{tr('Holat')}</span><StatusBadge status={o.status} /></div>
       </div>
     </Modal>
   )

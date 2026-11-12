@@ -4,16 +4,13 @@ import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
+import { useLanguage } from '../context/LanguageContext'
 import { ApiError } from '../services/apiClient'
-import { AlgoPage, EdversePage } from '../pages/algo/AlgoEdversePages'
-import BattlePage from '../pages/battle/BattlePage'
-import { BlogPage, BlogPostPage } from '../pages/blog/BlogPage'
 import { CourseDetailPage, CoursesPage } from '../pages/courses/CoursesPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
-import HackathonPage from '../pages/hackathon/HackathonPage'
 import PaymentPage from '../pages/payments/PaymentPage'
+import QuizPage from '../pages/quizzes/QuizPage'
 import { OrdersPage, ProductRedirect, ShopPage } from '../pages/shop/ShopPage'
-import WorksPage from '../pages/works/WorksPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +22,11 @@ const queryClient = new QueryClient({
     mutations: { retry: false },
   },
 })
+
+function NotFound() {
+  const { tr } = useLanguage()
+  return <EmptyState title={tr('Sahifa topilmadi')} icon={<Compass />} action={<Link to="/main-page"><Button>{tr('Asosiyga')}</Button></Link>} />
+}
 
 export default function App() {
   return (
@@ -39,18 +41,12 @@ export default function App() {
             <Route path="main-page" element={<DashboardPage />} />
             <Route path="my-courses" element={<CoursesPage />} />
             <Route path="my-courses/:courseId" element={<CourseDetailPage />} />
-            <Route path="my-works" element={<WorksPage />} />
-            <Route path="battle" element={<BattlePage />} />
-            <Route path="hackathon" element={<HackathonPage />} />
-            <Route path="edverse" element={<EdversePage />} />
-            <Route path="algo" element={<AlgoPage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="blog/:postId" element={<BlogPostPage />} />
             <Route path="online-payment" element={<PaymentPage />} />
+            <Route path="quizzes" element={<QuizPage />} />
             <Route path="space-shop" element={<ShopPage />} />
             <Route path="space-shop/orders" element={<OrdersPage />} />
             <Route path="space-shop/products/:productId" element={<ProductRedirect />} />
-            <Route path="*" element={<EmptyState title="Sahifa topilmadi" icon={<Compass />} action={<Link to="/main-page"><Button>Asosiyga</Button></Link>} />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </BrowserRouter>

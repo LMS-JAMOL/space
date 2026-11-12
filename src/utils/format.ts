@@ -1,8 +1,13 @@
 import type { Tone } from '../components/ui'
+import { trNow } from '../context/languageRuntime'
 import { API_BASE_URL } from '../services/apiClient'
 
 export const fmtNum = (n: number) => new Intl.NumberFormat('ru-RU').format(n)
-export const fmtMoney = (n: number, cur = 'UZS') => `${fmtNum(n)} ${cur === 'UZS' ? "so'm" : cur}`
+export const fmtMoney = (n: number, cur = 'UZS') => `${fmtNum(n)} ${cur === 'UZS' ? trNow("so'm") : cur}`
+
+/** Fills `{name}` placeholders: `fill(tr('{n} dars'), { n: 3 })`. */
+export const fill = (text: string, vars: Record<string, string | number>) =>
+  Object.entries(vars).reduce((acc, [k, v]) => acc.split(`{${k}}`).join(String(v)), text)
 export const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
 export const fmtDateTime = (iso: string) =>

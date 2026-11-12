@@ -1,7 +1,9 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+import { trNow } from '../context/languageRuntime'
 
-// Mocks are only reachable in `vite dev`; production builds always hit the real API.
-export const USE_MOCKS = import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true'
+export const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+  ''
 
 // TODO(backend): the auth scheme is not confirmed. Assumes a bearer access token
 // stored by the existing login flow + cookie-based refresh at POST /auth/refresh.
@@ -120,17 +122,12 @@ if (typeof window !== 'undefined') {
 async function parseError(res: Response): Promise<ApiError> {
   const data = await res.json().catch(() => null)
   const message =
-    data?.message ?? data?.error ?? (res.status >= 500 ? 'Server xatosi' : `So'rov bajarilmadi (${res.status})`)
+    data?.message ?? data?.error ?? (res.status >= 500 ? trNow('Server xatosi') : `${trNow("So'rov bajarilmadi")} (${res.status})`)
   return new ApiError(res.status, String(message), data?.code, data?.details)
 }
 
 export async function request<T>(path: string, opts: RequestOptions = {}, retried = false): Promise<T> {
   const method = opts.method ?? 'GET'
-
-  if (USE_MOCKS) {
-    const { mockAdapter } = await import('../mocks/mockAdapter')
-    return mockAdapter<T>(method, path, opts.query, opts.body)
-  }
 
   const headers: Record<string, string> = { Accept: 'application/json' }
   const token = localStorage.getItem(TOKEN_KEY)
@@ -155,7 +152,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
     })
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e
-    throw new ApiError(0, "Tarmoq xatosi: serverga ulanib bo'lmadi")
+    throw new ApiError(0, trNow("Tarmoq xatosi: serverga ulanib bo'lmadi"))
   }
 
   if (res.status === 401 && !retried && (await refreshToken())) {
@@ -176,5 +173,5 @@ export const api = {
 export function errorMessage(e: unknown): string {
   if (e instanceof ApiError) return e.message
   if (e instanceof Error) return e.message
-  return "Noma'lum xato"
+  return trNow("Noma'lum xato")
 }

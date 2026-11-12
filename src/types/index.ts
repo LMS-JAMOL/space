@@ -74,132 +74,6 @@ export interface CourseDetail extends CourseSummary {
   lessons?: Lesson[]
 }
 
-export type WorkStatus = 'not_submitted' | 'submitted' | 'in_review' | 'accepted' | 'rejected'
-
-export interface Attachment {
-  id: string
-  name: string
-  url: string
-  sizeBytes?: number | null
-}
-
-export interface Work {
-  id: string
-  title: string
-  kind: 'portfolio' | 'plan' | 'assignment'
-  courseTitle?: string | null
-  status: WorkStatus
-  deadline?: string | null
-  submittedAt?: string | null
-  mentorFeedback?: string | null
-  score?: number | null
-  attachments: Attachment[]
-}
-
-export interface Submission {
-  id: string
-  createdAt: string
-  status: WorkStatus
-  comment?: string | null
-  feedback?: string | null
-  attachments: Attachment[]
-}
-
-export interface BattleProfile {
-  playerId: string
-  nickname: string
-  avatarUrl?: string | null
-  rating: number
-  wins: number
-  losses: number
-  streak: number
-  achievements: { id: string; title: string; icon?: string | null; earnedAt: string }[]
-}
-
-export interface BattleOpponent {
-  id: string
-  nickname: string
-  rating: number
-  online: boolean
-}
-
-export type MatchStatus = 'searching' | 'matched' | 'in_progress' | 'finished' | 'cancelled'
-
-export interface BattleMatch {
-  id: string
-  status: MatchStatus
-  language?: string | null
-  difficulty?: string | null
-  opponent?: BattleOpponent | null
-  result?: 'win' | 'loss' | 'draw' | null
-  ratingDelta?: number | null
-  createdAt: string
-}
-
-export interface LeaderboardEntry {
-  rank: number
-  playerId: string
-  nickname: string
-  rating: number
-}
-
-export interface Hackathon {
-  id: string
-  title: string
-  description: string
-  status: 'upcoming' | 'registration' | 'running' | 'judging' | 'finished'
-  startsAt: string
-  endsAt: string
-  submissionDeadline: string
-  topics: string[]
-  maxTeamSize: number
-  myTeamId?: string | null
-}
-
-export interface HackathonTeam {
-  id: string
-  name: string
-  topic?: string | null
-  members: { id: string; fullName: string; role?: string | null }[]
-  isOpen: boolean
-}
-
-export interface HackathonSubmission {
-  id: string
-  teamId: string
-  teamName: string
-  projectTitle: string
-  repoUrl?: string | null
-  demoUrl?: string | null
-  status: 'draft' | 'submitted' | 'accepted' | 'rejected'
-  submittedAt?: string | null
-}
-
-export interface HackathonResult {
-  rank: number
-  teamId: string
-  teamName: string
-  score: number
-}
-
-export interface Certificate {
-  id: string
-  title: string
-  url: string
-}
-
-export interface BlogPost {
-  id: string
-  title: string
-  excerpt: string
-  content?: string
-  coverUrl?: string | null
-  category?: string | null
-  author?: string | null
-  publishedAt: string
-  readMinutes?: number | null
-}
-
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled'
 
 export interface Payment {
@@ -212,11 +86,28 @@ export interface Payment {
   description?: string | null
 }
 
+/** The student's wallet: the paid money that is left (falls with every held lesson), a debt, and a warning. */
+export interface Wallet {
+  paid: number
+  charged: number
+  remaining: number
+  debt: number
+  monthlyTariff: number
+  lessonPrice: number
+  warning: 'debt' | 'ending' | null
+  warningDay: number
+}
+
 export interface PaymentInfo {
   amountDue: number | null
+  pendingAmount?: number
+  wallet?: Wallet | null
   currency: string
   suggestedAmounts: number[]
   providers: string[]
+    upcomingPeriods?: { enrollment: string; period: string; groupName: string | null; dueAt: string; expected: number; paid: number; remaining: number }[]
+  enrollments?: { enrollment: string; group: string; groupName: string | null; status: 'ACTIVE' | 'INACTIVE' | 'FROZEN' | 'UNKNOWN' }[]
+  incompleteEnrollments?: string[]
 }
 
 export interface CheckoutResponse {
@@ -258,20 +149,4 @@ export interface Notification {
   body: string
   createdAt: string
   read: boolean
-}
-
-export interface AlgoTask {
-  id: string
-  title: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  tags: string[]
-  solved: boolean
-  attempts: number
-}
-
-export interface EdverseItem {
-  id: string
-  title: string
-  description: string
-  url?: string | null
 }
