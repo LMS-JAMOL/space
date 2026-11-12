@@ -4,7 +4,7 @@ React 19 + TypeScript + Vite + Tailwind v4 + React Router 7 + TanStack Query + L
 
 ```bash
 npm install
-cp .env.example .env.local   # VITE_API_BASE_URL → backend, e.g. http://localhost:7000/api/v1
+cp .env.example .env         # VITE_API_URL → https://mars-backend-uvh8.onrender.com
 npm run dev
 npm run build
 ```

@@ -1,6 +1,9 @@
 import { trNow } from '../context/languageRuntime'
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+export const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+  ''
 
 // TODO(backend): the auth scheme is not confirmed. Assumes a bearer access token
 // stored by the existing login flow + cookie-based refresh at POST /auth/refresh.
