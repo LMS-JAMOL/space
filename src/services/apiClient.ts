@@ -1,9 +1,20 @@
 import { trNow } from '../context/languageRuntime'
 
-export const API_BASE_URL =
+const configuredApiUrl =
   (import.meta.env.VITE_API_URL as string | undefined) ||
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-  (import.meta.env.DEV ? 'http://localhost:7000/api/v1' : '')
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)
+
+const normalizedApiUrl = configuredApiUrl?.replace(/\/+$/, '')
+
+// The Student SPACE router is mounted at `/api/v1` in the shared Backend.
+// Render may provide either the origin alone or an already-prefixed URL.
+export const API_BASE_URL = normalizedApiUrl
+  ? /\/api\/v1$/i.test(normalizedApiUrl)
+    ? normalizedApiUrl
+    : `${normalizedApiUrl}/api/v1`
+  : import.meta.env.DEV
+    ? 'http://localhost:7000/api/v1'
+    : ''
 
 // TODO(backend): the auth scheme is not confirmed. Assumes a bearer access token
 // stored by the existing login flow + cookie-based refresh at POST /auth/refresh.
