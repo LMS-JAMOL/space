@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Compass } from 'lucide-react'
-import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
@@ -31,7 +31,7 @@ function NotFound() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           {/* Auth screen sits outside the shell: the shell renders the profile. */}
           <Route path="/login" element={<LoginPage />} />
@@ -49,7 +49,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </QueryClientProvider>
   )
 }

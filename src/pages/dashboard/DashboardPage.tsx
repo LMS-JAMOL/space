@@ -7,6 +7,7 @@ import { BrowserQRCodeReader } from '@zxing/browser'
 import { Badge, Button, Card, ErrorState, Progress, Skeleton, cn } from '../../components/ui'
 import { dashboardService } from '../../services/dashboardService'
 import { attendanceService, type AttendanceMark } from '../../services/attendanceService'
+import { getAttendanceCapabilities } from '../../services/backendCapabilities'
 import TutorSection from './TutorSection'
 import HomeworkSection from './HomeworkSection'
 import { errorMessage } from '../../services/apiClient'
@@ -35,6 +36,8 @@ const CHECKIN_ERRORS: Record<string, string> = {
  */
 function CheckinCard() {
   const { tr } = useLanguage()
+  const capabilities = useQuery({ queryKey: ['attendance-capabilities'], queryFn: getAttendanceCapabilities })
+  const pinAvailable = capabilities.data?.pin === true
   const [scanning, setScanning] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -72,16 +75,17 @@ function CheckinCard() {
       <p className="mt-1 text-sm text-muted">{tr('Mentor ko‘rsatgan QR kodni skanerlang yoki uning yonidagi 6 xonali PIN kodni kiriting.')}</p>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <Button type="button" onClick={() => { setCameraError(''); setScanning(true) }} disabled={scanning || checkin.isPending}><QrCode className="size-4" /> {tr('QR skan qilish')}</Button>
-        <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); if (/^\d{6}$/.test(pin)) checkin.mutate({ pin }) }}>
+        <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); if (pinAvailable && /^\d{6}$/.test(pin)) checkin.mutate({ pin }) }}>
           <label className="flex flex-col gap-1 text-xs font-semibold text-muted">
             {tr('PIN kod')}
-            <input value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            <input value={pin} disabled={!pinAvailable} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))}
               inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} placeholder="••••••"
               className="h-10 w-32 rounded-[10px] border border-line bg-white px-3 text-center font-mono text-base tracking-[0.3em] text-ink outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
           </label>
-          <Button type="submit" variant="secondary" disabled={pin.length !== 6 || checkin.isPending}><Keyboard className="size-4" /> {tr('Tasdiqlash')}</Button>
+          <Button type="submit" variant="secondary" disabled={!pinAvailable || pin.length !== 6 || checkin.isPending}><Keyboard className="size-4" /> {tr('Tasdiqlash')}</Button>
         </form>
       </div>
+      {!capabilities.isPending && !pinAvailable && <p role="status" className="mt-2 text-sm text-muted">{tr('PIN orqali belgilash hozircha mavjud emas. QR koddan foydalaning.')}</p>}
       {scanning && <div className="mt-3 space-y-2"><video ref={videoRef} className="max-h-64 w-full rounded-xl bg-black object-contain" muted playsInline aria-label={tr('QR kod uchun kamera')} /><Button type="button" variant="secondary" onClick={() => setScanning(false)}>{tr('Kamerani yopish')}</Button></div>}
       {cameraError && <p role="alert" className="mt-3 text-sm text-red-600">{cameraError}</p>}
       {cameraError && <p className="mt-2 text-sm text-muted">{tr('Kamera ishlamasa, mentor ekranidagi PIN kodni kiriting.')}</p>}
@@ -102,7 +106,8 @@ const fmtClock = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { ho
 /** Own confirmed attendance (finalized journals): date, arrival time, minutes late. */
 function MyAttendanceCard() {
   const { tr } = useLanguage()
-  const { data, isLoading, error, refetch } = useQuery({ queryKey: ['my-attendance'], queryFn: attendanceService.history })
+  const capabilities = useQuery({ queryKey: ['attendance-capabilities'], queryFn: getAttendanceCapabilities })
+  const { data, isLoading, error, refetch } = useQuery({ queryKey: ['my-attendance'], queryFn: attendanceService.history, enabled: capabilities.data?.history === true })
   const marks = data?.attendance ?? []
   const label = (m: AttendanceMark) => m.status === 'present'
     ? (m.late ? (m.lateMinutes != null ? fill(tr('Kechikdi: {n} daqiqa'), { n: m.lateMinutes }) : tr('Kechikdi')) : tr('Keldi'))
@@ -111,9 +116,11 @@ function MyAttendanceCard() {
     <Card className="p-5">
       <h2 className="flex items-center gap-2 font-bold"><CalendarClock className="size-5 text-mars-600" aria-hidden="true" />{tr('Mening davomatim')}</h2>
       <p className="mt-1 text-sm text-muted">{tr('Mentor yakunlagan darslar. Belgi xato bo‘lsa, mentorga murojaat qiling.')}</p>
+      {!capabilities.isPending && !capabilities.error && !capabilities.data?.history && <p role="status" className="mt-3 text-sm text-muted">{tr('Davomat tarixi hozircha ulanmagan. Ma’lumot uchun kuratorga murojaat qiling.')}</p>}
+      {capabilities.error && <div className="mt-3"><ErrorState error={capabilities.error} onRetry={capabilities.refetch} /></div>}
       {isLoading && <div className="mt-3 space-y-2"><Skeleton className="h-9" /><Skeleton className="h-9" /></div>}
       {error && <div className="mt-3"><ErrorState error={error} onRetry={refetch} /></div>}
-      {!isLoading && !error && marks.length === 0 && <p className="mt-3 rounded-xl bg-canvas p-3 text-sm text-muted">{tr('Hali yakunlangan darslar yo‘q.')}</p>}
+      {capabilities.data?.history && !isLoading && !error && marks.length === 0 && <p className="mt-3 rounded-xl bg-canvas p-3 text-sm text-muted">{tr('Hali yakunlangan darslar yo‘q.')}</p>}
       {marks.length > 0 && (
         <ul className="mt-3 divide-y divide-line">
           {marks.slice(0, 10).map((m) => (
