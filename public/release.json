@@ -1,7 +1,7 @@
 {
   "frontend": "space",
   "sourceRepository": "LMS-JAMOL/space",
-  "sourceBranch": "Mirobid",
+  "sourceBranch": "Mirobid-2026-11-14",
   "sourceCommit": "c08fe7c",
   "backendUrl": "https://mars-backend-uvh8.onrender.com",
   "preparedAt": "2026-11-14",
