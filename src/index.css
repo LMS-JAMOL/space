@@ -34,8 +34,9 @@
   --animate-fade-up: fade-up 0.35s ease-out both;
   --animate-pulse-ring: pulse-ring 1.6s ease-out infinite;
 
+  /* 0.01, not 0: Chrome does not count opacity:0 content as painted (FCP/LCP). */
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0.01; transform: translateY(6px); }
     to { opacity: 1; transform: none; }
   }
   @keyframes pulse-ring {
