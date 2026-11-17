@@ -160,14 +160,8 @@ export function Chips<T extends string>({ options, value, onChange, dark }: { op
   )
 }
 
-export function Select({ value, onChange, options, className, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string; label?: string }) {
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}
-      className={cn('h-10 rounded-[10px] border border-line bg-white px-3 text-sm font-medium outline-none transition focus:border-mars-400 focus:ring-4 focus:ring-mars-100', className)}>
-      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
-  )
-}
+// Themed select with a portalled, keyboard-operable menu (replaces the native <select>).
+export { Select } from './Select'
 
 export function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
   const { tr } = useLanguage()

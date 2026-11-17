@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpenCheck, CheckCircle2, RotateCcw, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { Button, Card, EmptyState, ErrorState, PageHeader, Skeleton } from '../../components/ui'
+import { Button, Card, EmptyState, ErrorState, PageHeader, Select, Skeleton } from '../../components/ui'
 import { useLanguage } from '../../context/LanguageContext'
 import { errorMessage } from '../../services/apiClient'
 import { quizAttemptId, quizService, type QuizAnswer, type QuizQuestion } from '../../services/quizService'
@@ -85,22 +85,21 @@ function Question({ question, index, answer, onChange }: { question: QuizQuestio
     {question.type === 'multiple' && (question.options || []).map((option) => <label key={option.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-line p-2">
       <input type="checkbox" checked={(answer?.optionIds || []).includes(option.id)} onChange={(event) => onChange({ optionIds: event.target.checked
         ? [...(answer?.optionIds || []), option.id] : (answer?.optionIds || []).filter((id) => id !== option.id) })} />{option.text}</label>)}
-    {question.type === 'true_false' && <select className="w-full rounded-lg border border-line p-2" value={answer?.value === undefined ? '' : String(answer.value)}
-      onChange={(event) => onChange({ value: event.target.value === 'true' })}><option value="">{tr('Tanlang')}</option><option value="true">{tr('To‘g‘ri')}</option><option value="false">{tr('Noto‘g‘ri')}</option></select>}
+    {question.type === 'true_false' && <Select className="w-full" label={tr('Javob')} placeholder={tr('Tanlang')} value={answer?.value === undefined ? '' : String(answer.value)}
+      onChange={(value) => onChange({ value: value === 'true' })} options={[{ value: 'true', label: tr('To‘g‘ri') }, { value: 'false', label: tr('Noto‘g‘ri') }]} />}
     {question.type === 'numeric' && <input type="number" className="w-full rounded-lg border border-line p-2" placeholder={tr('Javob')}
       value={typeof answer?.value === 'number' ? answer.value : ''} onChange={(event) => onChange({ value: Number(event.target.value) })} />}
     {question.type === 'fill_blank' && (question.blanks || []).map((_, position) => <input key={position} className="w-full rounded-lg border border-line p-2"
       placeholder={`${tr('Javob')} ${position + 1}`} value={answer?.answers?.[position] || ''} onChange={(event) => {
         const values = [...(answer?.answers || [])]; values[position] = event.target.value; onChange({ answers: values })
       }} />)}
-    {question.type === 'ordering' && (question.elements || []).map((_, position) => <label key={position} className="block text-sm">{position + 1}.
-      <select className="ml-2 rounded-lg border border-line p-2" value={answer?.order?.[position] || ''} onChange={(event) => {
-        const order = [...(answer?.order || [])]; order[position] = event.target.value; onChange({ order })
-      }}><option value="">{tr('Tanlang')}</option>{question.elements?.map((item) => <option key={item.id} value={item.id}>{item.text}</option>)}</select></label>)}
-    {question.type === 'matching' && (question.leftItems || []).map((left) => <label key={left.id} className="block text-sm">{left.text}
-      <select className="ml-2 rounded-lg border border-line p-2" value={answer?.pairs?.find((pair) => pair.leftId === left.id)?.rightId || ''} onChange={(event) => onChange({ pairs: [
-        ...(answer?.pairs || []).filter((pair) => pair.leftId !== left.id), { leftId: left.id, rightId: event.target.value }] })}>
-        <option value="">{tr('Tanlang')}</option>{question.rightItems?.map((right) => <option key={right.id} value={right.id}>{right.text}</option>)}
-      </select></label>)}
+    {question.type === 'ordering' && (question.elements || []).map((_, position) => <div key={position} className="flex items-center gap-2 text-sm"><span className="w-6 shrink-0 font-semibold tabular-nums">{position + 1}.</span>
+      <Select className="min-w-0 flex-1" label={`${position + 1}-${tr('o‘rin')}`} placeholder={tr('Tanlang')} value={answer?.order?.[position] || ''} onChange={(value) => {
+        const order = [...(answer?.order || [])]; order[position] = value; onChange({ order })
+      }} options={(question.elements || []).map((item) => ({ value: item.id, label: item.text }))} /></div>)}
+    {question.type === 'matching' && (question.leftItems || []).map((left) => <div key={left.id} className="grid gap-2 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center"><span className="font-medium">{left.text}</span>
+      <Select className="w-full" label={left.text} placeholder={tr('Tanlang')} value={answer?.pairs?.find((pair) => pair.leftId === left.id)?.rightId || ''} onChange={(value) => onChange({ pairs: [
+        ...(answer?.pairs || []).filter((pair) => pair.leftId !== left.id), { leftId: left.id, rightId: value }] })}
+        options={(question.rightItems || []).map((right) => ({ value: right.id, label: right.text }))} /></div>)}
   </fieldset>
 }
