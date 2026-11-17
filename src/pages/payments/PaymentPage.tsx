@@ -10,6 +10,14 @@ import { useLanguage } from '../../context/LanguageContext'
 import type { PaymentInfo } from '../../types'
 import { fmtDateTime, fmtMoney, fmtNum, newIdempotencyKey } from '../../utils/format'
 
+/** Payment state of one enrollment as the backend reports it (never guessed on the client). */
+const PAY_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
+  ACTIVE: { label: 'To‘langan', cls: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500' },
+  INACTIVE: { label: 'To‘lov kutilmoqda', cls: 'border-amber-200 bg-amber-50 text-amber-800', dot: 'bg-amber-500' },
+  FROZEN: { label: 'Muzlatilgan', cls: 'border-blue-200 bg-blue-50 text-blue-800', dot: 'bg-blue-500' },
+  UNKNOWN: { label: 'Ma’lumot yetarli emas', cls: 'border-line bg-canvas text-muted', dot: 'bg-slate-400' },
+}
+
 export default function PaymentPage() {
   const { tr } = useLanguage()
   const [params, setParams] = useSearchParams()
@@ -29,8 +37,9 @@ export default function PaymentPage() {
             {info.data.enrollments.map((item) => (
               <div key={item.enrollment} className="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
                 <span className="font-medium">{item.groupName || item.group}</span>
-                <span className={cn('text-sm font-bold', item.status === 'ACTIVE' ? 'text-emerald-700' : item.status === 'INACTIVE' ? 'text-amber-700' : item.status === 'FROZEN' ? 'text-blue-700' : 'text-muted')}>
-                  {item.status === 'UNKNOWN' ? tr('Ma’lumot yetarli emas') : item.status}
+                <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold', PAY_STATUS[item.status]?.cls ?? PAY_STATUS.UNKNOWN.cls)}>
+                  <span className={cn('size-1.5 rounded-full', PAY_STATUS[item.status]?.dot ?? PAY_STATUS.UNKNOWN.dot)} aria-hidden="true" />
+                  {tr(PAY_STATUS[item.status]?.label ?? PAY_STATUS.UNKNOWN.label)}
                 </span>
               </div>
             ))}

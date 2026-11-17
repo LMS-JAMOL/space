@@ -385,5 +385,9 @@
   "PIN noto‘g‘ri yoki eskirgan. Mentor ekranidagi yangi PIN’ni kiriting.": "PIN неверный или устарел. Введите новый PIN с экрана ментора.",
   "PIN 6 ta raqamdan iborat.": "PIN состоит из 6 цифр.",
   "Hozir sizning darsingiz davom etmayapti.": "Сейчас у вас нет идущего урока.",
-  "PIN ko‘p marta xato kiritildi. QR kodni skanerlang yoki mentorga ayting.": "PIN введён неверно слишком много раз. Отсканируйте QR-код или обратитесь к ментору."
+  "PIN ko‘p marta xato kiritildi. QR kodni skanerlang yoki mentorga ayting.": "PIN введён неверно слишком много раз. Отсканируйте QR-код или обратитесь к ментору.",
+  "Xush kelibsiz": "Добро пожаловать",
+  "To‘langan": "Оплачено",
+  "To‘lov kutilmoqda": "Ожидается оплата",
+  "Muzlatilgan": "Заморожено"
 }

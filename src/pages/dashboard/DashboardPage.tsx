@@ -163,16 +163,10 @@ export default function DashboardPage() {
           <Link to="/online-payment"><Button size="sm">{tr("To'lash")}</Button></Link>
         </div>
       )}
-      <div className="grid gap-5 lg:grid-cols-2">
-        <CheckinCard />
-        <MyAttendanceCard />
-      </div>
-      <TutorSection />
-      <HomeworkSection />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2 animate-fade-up">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gradient-to-br from-mars-200 to-mars-500 opacity-25 blur-2xl" />
-          <p className="text-sm font-semibold text-mars-600">{tr('Xush kelibsiz 👋')}</p>
+          <p className="text-sm font-semibold text-mars-600">{tr('Xush kelibsiz')}</p>
           <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight">{s.fullName}</h1>
           <p className="mt-1 text-sm text-muted">{tr('Guruh')} {s.group ?? '—'}</p>
           <div className="mt-6 flex items-end gap-4">
@@ -213,6 +207,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      <div className="grid gap-5 lg:grid-cols-2">
+        <CheckinCard />
+        <MyAttendanceCard />
+      </div>
+      <TutorSection />
+      <HomeworkSection />
       <Card className="p-6">
         <h2 className="mb-5 font-bold">{tr("O'quv yo'li")}</h2>
         <div className="flex items-center overflow-x-auto pb-2">
