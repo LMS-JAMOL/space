@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell, BookOpen, BookOpenCheck, Coins, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
-  ShoppingBag, Wallet, X, Zap,
+  ArrowUpRight, ShoppingBag, Wallet, X, Zap,
 } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
@@ -63,19 +63,21 @@ function Sidebar({ onNavigate, scope, stagger }: { onNavigate?: () => void; scop
     <WalletCard />
     {/* LayoutGroup keeps the desktop and drawer pills apart (both can be mounted). */}
     <LayoutGroup id={scope}>
-    <motion.nav className="flex flex-col gap-1" aria-label={tr('Asosiy navigatsiya')}
+    {/* Same look as the Branch Manager sidebar: soft section label, 44px rows, orange pill. */}
+    <p className="px-3 pb-1.5 pt-2 text-[11px] font-medium text-ink/55">{tr('O‘quv maydoni')}</p>
+    <motion.nav className="flex flex-col gap-0.5" aria-label={tr('Asosiy navigatsiya')}
       variants={stagger ? staggerContainer(0.03, 0.06) : undefined} initial={stagger ? 'initial' : false} animate="animate">
       {NAV.map(({ to, label, icon: Icon }) => (
         <motion.div key={to} variants={stagger ? fadeUpItem : undefined}>
           <NavLink to={to} onClick={onNavigate}
             className={({ isActive }) => cn(
-              'group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[17px] transition-colors',
-              isActive ? 'font-semibold text-white' : 'font-medium text-ink hover:bg-black/5 active:bg-black/10',
+              'group relative isolate flex min-h-11 items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-mars-400',
+              isActive ? 'font-semibold text-white' : 'font-medium text-ink/70 hover:bg-canvas hover:text-ink active:bg-black/5',
             )}>
             {({ isActive }) => (
               <>
-                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-[10px] bg-mars-500 shadow-sm shadow-mars-500/30" transition={SPRING.snappy} aria-hidden="true" />}
-                <Icon className={cn('relative size-5 transition-transform duration-150 group-hover:scale-110', isActive ? 'text-white' : 'text-ink')} />
+                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 -z-10 rounded-[11px] bg-[#f44516] shadow-[0_3px_8px_rgb(0_0_0/9%)]" transition={SPRING.snappy} aria-hidden="true" />}
+                <Icon className={cn('relative size-[19px] shrink-0', isActive ? 'text-white' : 'text-ink/70 group-hover:text-ink')} aria-hidden="true" />
                 <span className="relative">{tr(label)}</span>
               </>
             )}
@@ -84,6 +86,10 @@ function Sidebar({ onNavigate, scope, stagger }: { onNavigate?: () => void; scop
       ))}
     </motion.nav>
     </LayoutGroup>
+    <NavLink to="/space-shop" onClick={onNavigate} className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3.5 text-ink/70 outline-none transition-colors duration-150 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-mars-400">
+      <span><strong className="block text-xs tracking-wide">MARS Space</strong><span className="mt-0.5 block text-[11px] text-ink/50">{tr('Coin evaziga sovg‘alar')}</span></span>
+      <ArrowUpRight className="size-[17px] shrink-0" aria-hidden="true" />
+    </NavLink>
     </>
   )
 }
@@ -231,7 +237,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto bg-canvas p-3 lg:block">
+      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto border-r border-line bg-white p-3 lg:block">
         <Sidebar scope="desktop" />
       </aside>
 
