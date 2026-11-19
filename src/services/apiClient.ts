@@ -1,4 +1,5 @@
 import { trNow } from '../context/languageRuntime'
+import { TRANSPORT, statusInfo } from '../lib/httpStatus'
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 
@@ -24,12 +25,15 @@ export class ApiError extends Error {
   status: number
   code?: string
   details?: unknown
+  /** True when repeating the same request can reasonably succeed. */
+  retryable: boolean
 
   constructor(status: number, message: string, code?: string, details?: unknown) {
     super(message)
     this.status = status
     this.code = code
     this.details = details
+    this.retryable = status === 0 || status === 408 || status === 429 || status >= 500
   }
 }
 
@@ -118,9 +122,11 @@ if (typeof window !== 'undefined') {
 
 async function parseError(res: Response): Promise<ApiError> {
   const data = await res.json().catch(() => null)
-  const message =
-    data?.message ?? data?.error ?? (res.status >= 500 ? trNow('Server xatosi') : `${trNow("So'rov bajarilmadi")} (${res.status})`)
-  return new ApiError(res.status, String(message), data?.code, data?.details)
+  // The backend copy wins when it says something specific; otherwise the
+  // registry sentence for this status is shown.
+  const fallback = trNow(statusInfo(res.status).message)
+  const message = String(data?.message ?? data?.error ?? fallback)
+  return new ApiError(res.status, message, data?.code ?? 'HTTP_' + res.status, data?.details)
 }
 
 export async function request<T>(path: string, opts: RequestOptions = {}, retried = false): Promise<T> {
@@ -149,7 +155,8 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
     })
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e
-    throw new ApiError(0, trNow("Tarmoq xatosi: serverga ulanib bo'lmadi"))
+    // status 0 = no HTTP response at all: network down or CORS block.
+    throw new ApiError(0, trNow(TRANSPORT.network.message), 'ERR_NETWORK')
   }
 
   if (res.status === 401 && !retried && (await refreshToken())) {

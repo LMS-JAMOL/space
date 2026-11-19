@@ -1,19 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Bell, BookOpen, BookOpenCheck, Coins, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
+  Bell, BookOpen, BookOpenCheck, ChevronDown, ChevronRight, Crown, Flame, Gamepad2, LayoutDashboard, LogOut, Menu,
   ArrowUpRight, ShoppingBag, Wallet, X, Zap,
 } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom'
 import { backdropVariants, DURATION, EASE, fadeUpItem, pageVariants, popoverVariants, SPRING, staggerContainer } from '../../lib/motion'
 import { ApiError, clearTokens } from '../../services/apiClient'
 import { authService } from '../../services/authService'
 import { notificationService } from '../../services/notificationService'
-import { fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
+import { fill, fmtDateTime, fmtMoney, fmtNum } from '../../utils/format'
 import { paymentService } from '../../services/paymentService'
 import { Badge, cn } from '../ui'
+import { MarsCoin } from '../ui/MarsCoin'
 import { useLanguage } from '../../context/LanguageContext'
+import type { Student } from '../../types'
 import MarsLogo from '../ui/MarsLogo'
 import { LangSwitcher } from './LangSwitcher'
 
@@ -39,20 +41,31 @@ function WalletCard() {
   const { data } = usePaymentInfo()
   const w = data?.wallet
   if (!w) return null
-  const tone = w.warning === 'debt' ? 'border-red-200 bg-red-50' : w.warning === 'ending' ? 'border-amber-200 bg-amber-50' : 'border-line bg-white'
+  const debt = w.debt > 0
+  const tone = w.warning === 'debt' || debt ? 'border-red-200 bg-red-50/70 hover:border-red-300'
+    : w.warning === 'ending' ? 'border-amber-200 bg-amber-50/70 hover:border-amber-300'
+    : 'border-line bg-canvas/60 hover:border-mars-200 hover:bg-mars-50/40'
+  const label = debt ? tr('Qarz') : tr('To‘langan qoldiq')
+  const amount = fmtMoney(debt ? w.debt : w.remaining)
   return (
-    <NavLink to="/online-payment" aria-label={tr('To‘lov hisobi')}
-      className={cn('mb-3 block rounded-[10px] border px-3 py-3 transition-colors hover:brightness-[0.98]', tone)}>
-      <div className="flex items-center gap-2 text-xs font-semibold text-muted"><Wallet className="size-4" />{w.debt > 0 ? tr('Qarz') : tr('To‘langan qoldiq')}</div>
-      <div className={cn('mt-1 text-xl font-extrabold', w.debt > 0 ? 'text-red-600' : 'text-ink')}>{fmtMoney(w.debt > 0 ? w.debt : w.remaining)}</div>
-      {w.lessonPrice > 0 && <div className="mt-0.5 text-[11px] text-muted">{tr('1 dars')} ≈ {fmtMoney(w.lessonPrice)}</div>}
+    <NavLink to="/online-payment" aria-label={`${tr('To‘lov hisobi')}: ${label} ${amount}`}
+      className={cn('group mb-4 block rounded-xl border px-3.5 py-3 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-mars-400', tone)}>
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+        <span className={cn('grid size-6 place-items-center rounded-lg', debt ? 'bg-red-100 text-red-700' : 'bg-white text-ink/70')} aria-hidden="true"><Wallet className="size-3.5" /></span>
+        <span className="flex-1">{label}</span>
+        <ChevronRight className="size-4 text-ink/40 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+      </div>
+      <div className={cn('mt-1.5 text-lg font-extrabold leading-tight tabular-nums', debt ? 'text-red-700' : 'text-ink')}>{amount}</div>
+      {w.lessonPrice > 0 && <div className="mt-0.5 text-xs text-muted tabular-nums">{tr('1 dars')} ≈ {fmtMoney(w.lessonPrice)}</div>}
+      {w.warning === 'ending' && !debt && <div className="mt-1.5 text-xs font-semibold text-amber-800">{tr('Qoldiq tugab bormoqda')}</div>}
     </NavLink>
   )
 }
 
 function Logo({ light }: { light?: boolean }) {
   return (
-    <MarsLogo variant={light ? 'white' : 'navy'} withStrapline={false} className="h-6 w-auto" />
+    // 16px tall below 380px so the header (menu, logo, coin, language, bell, profile) fits a 360px phone.
+    <MarsLogo variant={light ? 'white' : 'navy'} withStrapline={false} className="h-4 w-auto min-[380px]:h-5 sm:h-6" />
   )
 }
 
@@ -64,7 +77,7 @@ function Sidebar({ onNavigate, scope, stagger }: { onNavigate?: () => void; scop
     {/* LayoutGroup keeps the desktop and drawer pills apart (both can be mounted). */}
     <LayoutGroup id={scope}>
     {/* Same look as the Branch Manager sidebar: soft section label, 44px rows, orange pill. */}
-    <p className="px-3 pb-1.5 pt-2 text-[11px] font-medium text-ink/55">{tr('O‘quv maydoni')}</p>
+    <p className="px-3 pb-1.5 pt-1 text-xs font-medium text-muted">{tr('O‘quv maydoni')}</p>
     <motion.nav className="flex flex-col gap-0.5" aria-label={tr('Asosiy navigatsiya')}
       variants={stagger ? staggerContainer(0.03, 0.06) : undefined} initial={stagger ? 'initial' : false} animate="animate">
       {NAV.map(({ to, label, icon: Icon }) => (
@@ -72,7 +85,7 @@ function Sidebar({ onNavigate, scope, stagger }: { onNavigate?: () => void; scop
           <NavLink to={to} onClick={onNavigate}
             className={({ isActive }) => cn(
               'group relative isolate flex min-h-11 items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-mars-400',
-              isActive ? 'font-semibold text-white' : 'font-medium text-ink/70 hover:bg-canvas hover:text-ink active:bg-black/5',
+              isActive ? 'font-semibold text-white' : 'font-medium text-ink/75 hover:bg-canvas hover:text-ink active:bg-black/5',
             )}>
             {({ isActive }) => (
               <>
@@ -86,18 +99,82 @@ function Sidebar({ onNavigate, scope, stagger }: { onNavigate?: () => void; scop
       ))}
     </motion.nav>
     </LayoutGroup>
-    <NavLink to="/space-shop" onClick={onNavigate} className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3.5 text-ink/70 outline-none transition-colors duration-150 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-mars-400">
-      <span><strong className="block text-xs tracking-wide">MARS Space</strong><span className="mt-0.5 block text-[11px] text-ink/50">{tr('Coin evaziga sovg‘alar')}</span></span>
+    <NavLink to="/space-shop" onClick={onNavigate} className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3.5 text-ink/70 outline-none transition-colors duration-150 hover:border-mars-200 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-mars-400">
+      <MarsCoin size={28} className="shrink-0" />
+      <span className="min-w-0 flex-1"><strong className="block text-xs tracking-wide text-ink">MARS Space</strong><span className="mt-0.5 block text-xs text-muted">{tr('Coin evaziga sovg‘alar')}</span></span>
       <ArrowUpRight className="size-[17px] shrink-0" aria-hidden="true" />
     </NavLink>
     </>
   )
 }
 
-function Stat({ icon, value, className, title }: { icon: React.ReactNode; value: string; className: string; title: string }) {
+type StatDef = { key: string; label: string; hint?: string; value: string; short: string; icon: (size: number) => ReactNode; tone: string; show: string }
+
+/** The four gamification counters, labelled: shared by the header pills and their popover. */
+function useStats(me: Student): StatDef[] {
+  const { tr } = useLanguage()
+  return [
+    { key: 'coins', label: tr('MARS Coin'), hint: tr('Mentor beradi, Space Shop’da sarflanadi'), value: fmtNum(me.coins), short: fmtNum(me.coins),
+      icon: (size) => <MarsCoin size={size + 2} className="shrink-0" />, tone: 'bg-amber-50 text-amber-800', show: 'flex' },
+    { key: 'streak', label: tr('Streak'), hint: tr('Ketma-ket kunlar seriyasi'), value: fill(tr('{n} kun'), { n: me.streak }), short: String(me.streak),
+      icon: (size) => <Flame style={{ width: size, height: size }} className="shrink-0" aria-hidden="true" />, tone: 'bg-mars-50 text-mars-700', show: 'hidden md:flex' },
+    { key: 'points', label: tr('Ballar'), value: fmtNum(me.points), short: fmtNum(me.points),
+      icon: (size) => <Gamepad2 style={{ width: size, height: size }} className="shrink-0" aria-hidden="true" />, tone: 'bg-violet-50 text-violet-700', show: 'hidden xl:flex' },
+    { key: 'energy', label: tr('Energiya'), value: `${me.energy}/${me.maxEnergy}`, short: `${me.energy}/${me.maxEnergy}`,
+      icon: (size) => <Zap style={{ width: size, height: size }} className="shrink-0" aria-hidden="true" />, tone: 'bg-sky-50 text-sky-800', show: 'hidden xl:flex' },
+  ]
+}
+
+/**
+ * Header counters as one button: phones see only the coin pill, wider screens more pills.
+ * A click opens the full labelled list, so the header itself never wraps.
+ */
+function HeaderStats({ me }: { me: Student }) {
+  const { tr } = useLanguage()
+  const stats = useStats(me)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', onKey) }
+  }, [open])
+  const summary = stats.map((s) => `${s.label}: ${s.value}`).join(', ')
   return (
-    <div title={title} className={cn(!className.includes('hidden') && 'flex', 'h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-bold', className)}>
-      {icon}{value}
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open}
+        aria-label={`${tr('Mening ko‘rsatkichlarim')}. ${summary}`}
+        className={cn('flex h-11 items-center gap-1 rounded-xl px-1 transition-colors duration-150 hover:bg-canvas sm:h-10', open && 'bg-canvas')}>
+        {stats.map((s) => (
+          <span key={s.key} className={cn(s.show, 'h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-bold tabular-nums', s.tone)} aria-hidden="true">
+            {s.icon(16)}{s.short}
+          </span>
+        ))}
+        <ChevronDown className={cn('hidden size-4 text-muted transition-transform duration-150 sm:block', open && 'rotate-180')} aria-hidden="true" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div role="dialog" aria-label={tr('Mening ko‘rsatkichlarim')} variants={popoverVariants} initial="initial" animate="animate" exit="exit" style={{ transformOrigin: 'top right' }}
+            className="absolute right-0 top-12 z-40 w-72 rounded-2xl border border-line bg-white p-2 shadow-lift max-sm:fixed max-sm:inset-x-2 max-sm:top-[68px] max-sm:w-auto">
+            <p className="px-2.5 pb-1 pt-1.5 text-xs font-semibold text-muted">{tr('Mening ko‘rsatkichlarim')}</p>
+            <ul>
+              {stats.map((s) => (
+                <li key={s.key} className="flex items-center gap-3 rounded-xl px-2.5 py-2">
+                  <span className={cn('grid size-10 shrink-0 place-items-center rounded-xl', s.tone)} aria-hidden="true">{s.icon(20)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{s.label}</span>
+                    {s.hint && <span className="block text-xs leading-snug text-muted">{s.hint}</span>}
+                  </span>
+                  <span className="text-sm font-extrabold tabular-nums">{s.value}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -124,26 +201,37 @@ function Notifications() {
   }, [])
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen((v) => !v)} className="relative grid size-9 place-items-center rounded-xl text-muted hover:bg-canvas hover:text-ink" aria-label={tr('Bildirishnomalar')}>
-        <Bell className="size-5" />
-        {unread > 0 && <span className="absolute right-1 top-1 grid min-w-4 h-4 place-items-center rounded-full bg-mars-500 px-1 text-[10px] font-bold text-white">{unread}</span>}
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open}
+        className={cn('relative grid size-11 place-items-center rounded-xl text-muted transition-colors duration-150 hover:bg-canvas hover:text-ink sm:size-10', open && 'bg-canvas text-ink')}
+        aria-label={unread > 0 ? `${tr('Bildirishnomalar')}: ${unread}` : tr('Bildirishnomalar')}>
+        <Bell className="size-5" aria-hidden="true" />
+        {unread > 0 && <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-mars-600 px-1 text-[10px] font-bold tabular-nums text-white ring-2 ring-white" aria-hidden="true">{unread > 99 ? '99+' : unread}</span>}
       </button>
       <AnimatePresence>
       {open && (
-        <motion.div variants={popoverVariants} initial="initial" animate="animate" exit="exit" style={{ transformOrigin: 'top right' }} className="absolute right-0 top-11 z-40 w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-line bg-white shadow-lift">
-          <div className="border-b border-line px-4 py-3 font-bold">{tr('Bildirishnomalar')}</div>
-          <div className="max-h-80 overflow-auto">
-            {!data?.length && <p className="p-6 text-center text-sm text-muted">{tr("Bildirishnomalar yo'q")}</p>}
+        <motion.div variants={popoverVariants} initial="initial" animate="animate" exit="exit" style={{ transformOrigin: 'top right' }}
+          className="absolute right-0 top-12 z-40 w-80 overflow-hidden rounded-2xl border border-line bg-white shadow-lift max-sm:fixed max-sm:inset-x-2 max-sm:top-[68px] max-sm:w-auto">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <span className="font-bold">{tr('Bildirishnomalar')}</span>
+            {unread > 0 && <Badge tone="orange">{fill(tr('{n} ta yangi'), { n: unread })}</Badge>}
+          </div>
+          <div className="max-h-[min(20rem,70dvh)] divide-y divide-line overflow-auto">
+            {!data?.length && (
+              <div className="flex flex-col items-center gap-2 px-6 py-8 text-center">
+                <span className="grid size-10 place-items-center rounded-xl bg-canvas text-muted" aria-hidden="true"><Bell className="size-5" /></span>
+                <p className="text-sm text-muted">{tr("Bildirishnomalar yo'q")}</p>
+              </div>
+            )}
             {data?.map((n) => (
-              <button key={n.id} onClick={() => !n.read && read.mutate(n.id)} className={cn('block w-full px-4 py-3 text-left hover:bg-canvas', !n.read && 'bg-mars-50/50')}>
+              <button key={n.id} type="button" onClick={() => !n.read && read.mutate(n.id)} className={cn('block w-full px-4 py-3 text-left transition-colors duration-150 hover:bg-canvas', !n.read && 'bg-mars-50/50')}>
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                  {!n.read && <span className="size-2 rounded-full bg-mars-500" />}
-                  {n.type === 'coin' && <Coins className="size-4 shrink-0 text-amber-600" />}
+                  {!n.read && <span className="size-2 shrink-0 rounded-full bg-mars-500" aria-hidden="true" />}
+                  {n.type === 'coin' && <MarsCoin size={18} className="shrink-0" />}
                   {n.type === 'coin'
                     ? tr('Mentor sizga {amount} coin berdi').replace('{amount}', fmtNum(n.data?.amount ?? 0))
                     : n.title}
                 </div>
-                <div className="text-xs text-muted">
+                <div className="mt-0.5 text-xs text-muted">
                   {n.type === 'coin' ? `${tr('Guruh')}: ${n.body}` : n.body} · {fmtDateTime(n.createdAt)}
                 </div>
               </button>
@@ -163,18 +251,24 @@ function ProfileMenu() {
   const initials = me?.fullName.split(' ').map((s) => s[0]).join('').slice(0, 2) ?? '··'
   return (
     <div className="relative">
-      <button onClick={() => setOpen((v) => !v)} onBlur={() => setTimeout(() => setOpen(false), 150)} className="flex items-center gap-2 rounded-xl p-1 pr-2 hover:bg-canvas" aria-label={tr('Profil menyusi')}>
+      <button type="button" onClick={() => setOpen((v) => !v)} onBlur={() => setTimeout(() => setOpen(false), 150)} aria-expanded={open}
+        className={cn('flex h-11 items-center gap-2 rounded-xl p-1.5 transition-colors duration-150 hover:bg-canvas sm:h-10 lg:pr-2.5', open && 'bg-canvas')} aria-label={tr('Profil menyusi')}>
         {me?.avatarUrl ? <img src={me.avatarUrl} alt="" className="size-8 rounded-lg object-cover" />
-          : <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-mars-400 to-mars-600 text-xs font-bold text-white">{initials}</div>}
-        <span className="hidden text-sm font-semibold lg:block">{me?.fullName ?? ''}</span>
+          : <div className="grid size-8 place-items-center rounded-lg bg-mars-600 text-xs font-bold text-white" aria-hidden="true">{initials}</div>}
+        <span className="hidden max-w-40 truncate text-sm font-semibold lg:block">{me?.fullName ?? ''}</span>
+        <ChevronDown className={cn('hidden size-4 text-muted transition-transform duration-150 lg:block', open && 'rotate-180')} aria-hidden="true" />
       </button>
       <AnimatePresence>
       {open && (
-        <motion.div variants={popoverVariants} initial="initial" animate="animate" exit="exit" style={{ transformOrigin: 'top right' }} className="absolute right-0 top-11 z-40 w-56 rounded-2xl border border-line bg-white p-2 shadow-lift">
-          <div className="px-3 py-2"><div className="font-bold">{me?.fullName}</div><div className="text-xs text-muted">{tr('Guruh')}: {me?.group ?? '—'} · {tr('Level')} {me?.level}</div></div>
-          <button onClick={() => authService.logout().catch(() => {}).finally(() => { clearTokens(); location.reload() })}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
-            <LogOut className="size-4" />{tr('Chiqish')}
+        <motion.div variants={popoverVariants} initial="initial" animate="animate" exit="exit" style={{ transformOrigin: 'top right' }} className="absolute right-0 top-12 z-40 w-64 max-w-[calc(100vw-1rem)] rounded-2xl border border-line bg-white p-2 shadow-lift">
+          <div className="mb-1 border-b border-line px-3 pb-3 pt-2">
+            <div className="truncate font-bold">{me?.fullName}</div>
+            <div className="mt-0.5 text-xs text-muted">{tr('Guruh')}: {me?.group ?? '—'}</div>
+            {me && <div className="mt-2 flex flex-wrap gap-1.5"><Badge tone="orange">{tr('Level')} {me.level}</Badge>{me.isPremium && <Badge tone="violet"><Crown className="size-3" aria-hidden="true" />Premium</Badge>}</div>}
+          </div>
+          <button type="button" onClick={() => authService.logout().catch(() => {}).finally(() => { clearTokens(); location.reload() })}
+            className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-red-700 transition-colors duration-150 hover:bg-red-50 sm:min-h-10">
+            <LogOut className="size-4" aria-hidden="true" />{tr('Chiqish')}
           </button>
         </motion.div>
       )}
@@ -216,20 +310,14 @@ export function AppLayout() {
     // "user": transform animations are skipped when the OS asks for reduced motion.
     <MotionConfig reducedMotion="user">
     <div className="min-h-full">
-      <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
-        <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:px-6">
-          <button onClick={() => setDrawer(true)} className="rounded-lg p-2 text-muted hover:bg-canvas lg:hidden" aria-label={tr('Menyu')}><Menu className="size-5" /></button>
-          <NavLink to="/main-page" aria-label={tr('Asosiy sahifa')}><Logo /></NavLink>
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            {me && (
-              <>
-                <Stat title={tr('MARS Coin')} icon={<Coins className="size-4" />} value={fmtNum(me.coins)} className="hidden sm:flex bg-amber-50 text-amber-700" />
-                <Stat title={tr('Streak')} icon={<Flame className="size-4" />} value={String(me.streak)} className="hidden sm:flex bg-mars-50 text-mars-600" />
-                <Stat title={tr('Ballar')} icon={<Gamepad2 className="size-4" />} value={fmtNum(me.points)} className="hidden md:flex bg-violet-50 text-violet-700" />
-                <Stat title={tr('Energiya')} icon={<Zap className="size-4" />} value={`${me.energy}/${me.maxEnergy}`} className="hidden md:flex bg-sky-50 text-sky-700" />
-                {me.isPremium && <Badge tone="violet" className="hidden xl:inline-flex"><Crown className="size-3" />Premium</Badge>}
-              </>
-            )}
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:shadow-lift">{tr('Asosiy tarkibga o‘tish')}</a>
+      <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur-md">
+        <div className="flex h-16 min-w-0 items-center gap-0.5 px-1.5 min-[380px]:gap-1 min-[380px]:px-2 sm:gap-2 sm:px-4 lg:px-6">
+          <button type="button" onClick={() => setDrawer(true)} aria-expanded={drawer} className="grid size-11 shrink-0 place-items-center rounded-xl text-muted transition-colors duration-150 hover:bg-canvas hover:text-ink lg:hidden" aria-label={tr('Menyu')}><Menu className="size-5" aria-hidden="true" /></button>
+          <NavLink to="/main-page" aria-label={tr('Asosiy sahifa')} className="flex h-11 shrink-0 items-center rounded-xl px-0.5 min-[380px]:px-1"><Logo /></NavLink>
+          <div className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-1.5">
+            {me && <HeaderStats me={me} />}
+            {me?.isPremium && <Badge tone="violet" className="hidden 2xl:inline-flex"><Crown className="size-3" aria-hidden="true" />Premium</Badge>}
             <LangSwitcher />
             <Notifications />
             <ProfileMenu />
@@ -237,7 +325,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto border-r border-line bg-white p-3 lg:block">
+      <aside className="fixed bottom-0 left-0 top-16 hidden w-[248px] overflow-y-auto border-r border-line bg-white p-3 pt-4 lg:block">
         <Sidebar scope="desktop" />
       </aside>
 
@@ -247,17 +335,18 @@ export function AppLayout() {
             <motion.div variants={backdropVariants} className="absolute inset-0 bg-navy-950/50 backdrop-blur-[2px]" onClick={() => setDrawer(false)} aria-hidden="true" />
             <motion.div
               variants={{ initial: { x: '-100%' }, animate: { x: 0, transition: SPRING.drawer }, exit: { x: '-100%', transition: { duration: DURATION.base, ease: EASE.inOut } } }}
-              className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-white p-4 shadow-lift"
+              className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto overscroll-contain bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lift"
             >
-              <div className="mb-6 flex items-center justify-between"><Logo /><button type="button" autoFocus onClick={() => setDrawer(false)} className="grid size-11 place-items-center rounded-lg hover:bg-canvas" aria-label={tr('Yopish')}><X className="size-5" /></button></div>
+              <div className="mb-4 flex items-center justify-between pl-2"><Logo /><button type="button" autoFocus onClick={() => setDrawer(false)} className="grid size-11 place-items-center rounded-xl text-muted transition-colors duration-150 hover:bg-canvas hover:text-ink" aria-label={tr('Yopish')}><X className="size-5" aria-hidden="true" /></button></div>
               <Sidebar scope="drawer" stagger onNavigate={() => setDrawer(false)} />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main className="lg:pl-[248px]">
-        <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+      <main id="main" tabIndex={-1} className="outline-none lg:pl-[248px]">
+        {/* The one page container: 1200px max, 16/24/32px gutters by breakpoint. */}
+        <div className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-8">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={pathname} variants={pageVariants} initial="initial" animate="animate" exit="exit">
               {outlet}

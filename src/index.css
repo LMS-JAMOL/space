@@ -11,7 +11,8 @@
   --color-mars-400: #ff7a3d;
   --color-mars-500: #ef400f;
   --color-mars-600: #c9360b;
-  --color-mars-700: #c62e0b;
+  --color-mars-700: #ad2a09;
+  --color-mars-800: #8f2207;
 
   --color-navy-50: #eef2fb;
   --color-navy-300: #8ea0cc;
@@ -48,6 +49,7 @@
 html, body, #root { height: 100%; }
 body {
   background: var(--color-canvas);
+  text-rendering: optimizeLegibility;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

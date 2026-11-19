@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Plus } from 'lucide-react'
-import { Button, Card, Modal, cn } from '../../components/ui'
+import { Check, GraduationCap, Plus } from 'lucide-react'
+import { Badge, Button, Card, CardHeader, EmptyState, ErrorState, InlineAlert, Modal, Skeleton, cn, textareaCls } from '../../components/ui'
 import { api, errorMessage } from '../../services/apiClient'
 import { useLanguage } from '../../context/LanguageContext'
 
@@ -72,75 +72,80 @@ export default function TutorSection() {
 
   return (
     <Card className="p-5">
-      <h2 className="font-bold">{tr('Qo‘shimcha dars')}</h2>
-      <p className="mt-1 text-sm text-muted">{tr('Kunni tanlab “+” ni bosing, tutor va qulay vaqtni tanlang, mavzuni yozing.')}</p>
-      <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
-        {days.map((d) => {
+      <CardHeader icon={<GraduationCap />} title={tr('Qo‘shimcha dars')} description={tr('Kunni tanlab “+” ni bosing, tutor va qulay vaqtni tanlang, mavzuni yozing.')} />
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {days.map((d, i) => {
           const list = slotsOf(d.key)
+          const loading = queries[i]?.isLoading
           const booked = list.filter((s) => s.booked).length
           const free = list.filter((s) => s.canBook).length
           return (
-            <div key={d.key} className={cn('flex flex-col items-center rounded-[10px] border px-2 py-3 text-center', booked ? 'border-mars-300 bg-mars-50' : 'border-line bg-white')}>
+            <li key={d.key} className={cn('flex flex-col items-center rounded-xl border px-2 py-3 text-center transition-colors duration-150', booked ? 'border-mars-300 bg-mars-50' : free > 0 ? 'border-line bg-white' : 'border-line bg-canvas/60')}>
               <div className="text-xs font-semibold text-muted">{tr(SHORT_DAYS[d.weekday])}</div>
-              <div className="text-xl font-extrabold leading-tight">{d.date}</div>
-              <div className="mb-2 min-h-4 text-[11px] text-muted">{booked ? tr('Yozilgansiz') : free > 0 ? `${free} ${tr('bo‘sh vaqt')}` : tr('bo‘sh vaqt yo‘q')}</div>
+              <div className="text-xl font-extrabold leading-tight tabular-nums">{d.date}</div>
+              <div className={cn('mb-2 min-h-8 text-[11px] leading-tight', booked ? 'font-semibold text-mars-700' : 'text-muted')}>
+                {loading ? <Skeleton className="mx-auto mt-1 h-3 w-12" /> : booked ? tr('Yozilgansiz') : free > 0 ? `${free} ${tr('bo‘sh vaqt')}` : tr('bo‘sh vaqt yo‘q')}
+              </div>
               <button type="button" onClick={() => { setDone(null); book.reset(); setOpen(d.key) }} disabled={free === 0}
                 aria-label={`${tr('Qo‘shimcha dars qo‘shish')}: ${tr(SHORT_DAYS[d.weekday])} ${d.date}`}
-                className="grid size-9 place-items-center rounded-full bg-mars-500 text-white transition hover:bg-mars-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mars-500 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted">
-                <Plus className="size-5" />
+                className="grid size-11 place-items-center rounded-full bg-mars-600 text-white shadow-sm shadow-mars-600/25 transition duration-150 hover:bg-mars-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted disabled:shadow-none">
+                <Plus className="size-5" aria-hidden="true" />
               </button>
-            </div>
+            </li>
           )
         })}
-      </div>
-      {done && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{tr('Bron tasdiqlandi')}: {done}</p>}
+      </ul>
+      {done && <InlineAlert tone="success" role="status" className="mt-4">{tr('Bron tasdiqlandi')}: {done}</InlineAlert>}
       <div className="mt-5 border-t border-line pt-4">
-        <h3 className="font-semibold">{tr('Mening bronlarim')}</h3>
-        {myBookings.isLoading ? <p className="mt-2 text-sm text-muted">{tr('Yuklanmoqda')}</p> : myBookings.error ? <p role="alert" className="mt-2 text-sm text-red-600">{errorMessage(myBookings.error)}</p> : !myBookings.data?.length ? <p className="mt-2 text-sm text-muted">{tr('Bronlar yo‘q')}</p> : <div className="mt-2 space-y-2">{myBookings.data.map((s) => <div key={`${s.dayId}:${s.id}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-3 text-sm">
-          <span className="min-w-0 flex-1"><strong>{s.tutor}</strong> · {s.course} · {dayKey(new Date(s.start))} {hhmm(s.start)}–{hhmm(s.end)}{s.topic ? ` · ${s.topic}` : ''}</span>
-          {s.status === 'no_show' ? <span className="text-amber-700">{tr('15 daqiqada kelmagani uchun bekor qilindi')}</span> : <><span>{s.attendance ? tr(s.attendance === 'late' ? 'Kechikdi' : 'Keldi') : tr('Yozilgansiz')}</span><Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => cancel.mutate(s)}>{tr('Bronni bekor qilish')}</Button></>}
-        </div>)}</div>}
-        {cancel.error && <p role="alert" className="mt-2 text-sm text-red-600">{errorMessage(cancel.error)}</p>}
+        <h3 className="mb-2 font-bold">{tr('Mening bronlarim')}</h3>
+        {myBookings.isLoading ? <Skeleton className="h-14" /> : myBookings.error ? <ErrorState compact error={myBookings.error} onRetry={myBookings.refetch} /> : !myBookings.data?.length ? <EmptyState compact icon={<GraduationCap />} title={tr('Bronlar yo‘q')} /> : <ul className="space-y-2">{myBookings.data.map((s) => <li key={`${s.dayId}:${s.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line p-3 text-sm">
+          <span className="min-w-0 flex-1">
+            <strong>{s.tutor}</strong> <span className="text-muted">· {s.course}</span>
+            <span className="block text-xs text-muted tabular-nums">{dayKey(new Date(s.start))} {hhmm(s.start)}–{hhmm(s.end)}{s.topic ? ` · ${s.topic}` : ''}</span>
+          </span>
+          {s.status === 'no_show' ? <Badge tone="yellow" className="whitespace-normal">{tr('15 daqiqada kelmagani uchun bekor qilindi')}</Badge> : <><Badge tone={s.attendance ? 'green' : 'orange'}>{s.attendance ? tr(s.attendance === 'late' ? 'Kechikdi' : 'Keldi') : tr('Yozilgansiz')}</Badge><Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => cancel.mutate(s)}>{tr('Bronni bekor qilish')}</Button></>}
+        </li>)}</ul>}
+        {cancel.error && <InlineAlert tone="danger" role="alert" className="mt-2">{errorMessage(cancel.error)}</InlineAlert>}
       </div>
 
-      <Modal open={Boolean(open)} onClose={reset} title={day ? `${tr('Qo‘shimcha dars')} — ${tr(SHORT_DAYS[day.weekday])} ${day.date}` : tr('Qo‘shimcha dars')}
-        footer={<Button disabled={!valid} loading={book.isPending} onClick={() => chosen && book.mutate(chosen)}><Check className="size-4" />{tr('Bronni tasdiqlash')}</Button>}>
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-sm font-semibold">{tr('Tutorni tanlang')}</p>
+      <Modal open={Boolean(open)} onClose={reset} title={day ? `${tr('Qo‘shimcha dars')} — ${tr(SHORT_DAYS[day.weekday])} ${day.date}` : tr('Qo‘shimcha dars')} busy={book.isPending}
+        footer={<Button disabled={!valid} loading={book.isPending} onClick={() => chosen && book.mutate(chosen)}><Check className="size-4" aria-hidden="true" />{tr('Bronni tasdiqlash')}</Button>}>
+        <div className="space-y-5">
+          <fieldset>
+            <legend className="mb-2 text-sm font-semibold"><span className="mr-1.5 inline-grid size-5 place-items-center rounded-full bg-mars-50 text-xs font-bold text-mars-700">1</span>{tr('Tutorni tanlang')}</legend>
             <div className="space-y-2">
               {tutors.map((name) => (
                 <button key={name} type="button" aria-pressed={name === tutor} onClick={() => { setTutor(name); setSlotId(null) }}
-                  className={cn('flex w-full items-center justify-between rounded-[10px] border px-4 py-3 text-left', name === tutor ? 'border-mars-500 bg-mars-50' : 'border-line hover:bg-black/5')}>
+                  className={cn('flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors duration-150', name === tutor ? 'border-mars-500 bg-mars-50 ring-2 ring-mars-100' : 'border-line hover:border-mars-200 hover:bg-canvas')}>
                   <span className="font-bold">{name}</span>
                   <span className="text-xs text-muted">{slots.find((s) => s.tutor === name)?.course}</span>
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
           {tutor && (
-            <div>
-              <p className="mb-2 text-sm font-semibold">{tr('Vaqtni tanlang')}</p>
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold"><span className="mr-1.5 inline-grid size-5 place-items-center rounded-full bg-mars-50 text-xs font-bold text-mars-700">2</span>{tr('Vaqtni tanlang')}</legend>
               <div className="grid grid-cols-2 gap-2">
                 {mine.map((s) => (
                   <button key={s.id} type="button" disabled={!s.canBook} aria-pressed={s.id === slotId} onClick={() => setSlotId(s.id)}
-                    className={cn('rounded-[10px] border px-3 py-3 text-left disabled:cursor-not-allowed disabled:opacity-50', s.id === slotId ? 'border-mars-500 bg-mars-50' : 'border-line hover:bg-black/5')}>
-                    <span className="block font-bold">{hhmm(s.start)} — {hhmm(s.end)}</span>
+                    className={cn('rounded-xl border px-3 py-3 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50', s.id === slotId ? 'border-mars-500 bg-mars-50 ring-2 ring-mars-100' : 'border-line hover:border-mars-200 hover:bg-canvas')}>
+                    <span className="block font-bold tabular-nums">{hhmm(s.start)} — {hhmm(s.end)}</span>
                     <span className="block text-xs text-muted">{s.booked ? tr('Yozilgansiz') : s.canBook ? `${tr('Bo‘sh joylar')}: ${s.seatsLeft} / 3` : tr('Yozilish yopilgan')}</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
           )}
           {chosen && (
             <label className="block">
-              <span className="mb-1 block text-sm font-semibold">{tr('Mavzu')}</span>
+              <span className="mb-1.5 block text-sm font-semibold"><span className="mr-1.5 inline-grid size-5 place-items-center rounded-full bg-mars-50 text-xs font-bold text-mars-700">3</span>{tr('Mavzu')}</span>
               <textarea value={topic} onChange={(e) => setTopic(e.target.value)} rows={3} maxLength={200}
-                placeholder={tr('Nimani o‘rganmoqchisiz yoki qaysi mavzu tushunarsiz?')}
-                className="w-full rounded-[10px] border border-line bg-white p-3 text-sm outline-none focus:border-mars-400 focus:ring-4 focus:ring-mars-100" />
+                placeholder={tr('Nimani o‘rganmoqchisiz yoki qaysi mavzu tushunarsiz?')} className={textareaCls} />
+              <span className="mt-1 flex justify-between text-xs text-muted"><span>{tr('Kamida 3 ta belgi')}</span><span className="tabular-nums">{topic.length} / 200</span></span>
             </label>
           )}
-          {book.error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{errorMessage(book.error)}</p>}
+          {book.error && <InlineAlert tone="danger" role="alert">{errorMessage(book.error)}</InlineAlert>}
         </div>
       </Modal>
     </Card>

@@ -5,7 +5,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { Button, EmptyState } from '../components/ui'
 import { useLanguage } from '../context/LanguageContext'
-import { ApiError } from '../services/apiClient'
+import { isRetryableError } from '../lib/apiError'
 import { CourseDetailPage, CoursesPage } from '../pages/courses/CoursesPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import PaymentPage from '../pages/payments/PaymentPage'
@@ -17,7 +17,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       refetchOnWindowFocus: false,
-      retry: (count, e) => !(e instanceof ApiError && e.status >= 400 && e.status < 500) && count < 2,
+      // Retry only what can actually succeed (408/429/5xx/network).
+      retry: (count, e) => isRetryableError(e) && count < 2,
     },
     mutations: { retry: false },
   },

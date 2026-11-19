@@ -116,13 +116,17 @@ export function LoginPage() {
                 inputMode="numeric"
                 maxLength={7}
                 autoComplete="off"
-                className="auth-input"
+                className={`auth-input${login.isError ? ' has-error' : ''}`}
+                placeholder={tr('7 xonali raqam')}
+                aria-describedby={login.isError ? 'login-error' : 'login-id-hint'}
+                aria-invalid={login.isError || undefined}
                 value={loginId}
                 onChange={(e) => setLoginId(normalizeLoginId(e.target.value))}
                 autoFocus
                 required
               />
             </div>
+            <p id="login-id-hint" className="mt-1.5 text-xs font-medium text-slate-600">{tr('Administrator bergan 7 xonali ID')}</p>
           </div>
 
           <div>
@@ -139,14 +143,17 @@ export function LoginPage() {
                 placeholder={tr('Parolni kiriting')}
                 autoComplete="current-password"
                 className={`auth-input${login.isError ? ' has-error' : ''}`}
+                aria-describedby={login.isError ? 'login-error' : undefined}
+                aria-invalid={login.isError || undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                className="absolute right-1 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-xl text-slate-500 transition-colors hover:text-slate-700"
                 onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
                 aria-label={showPassword ? tr('Parolni yashirish') : tr('Parolni ko‘rsatish')}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -156,14 +163,15 @@ export function LoginPage() {
 
           {login.isError && (
             <div
+              id="login-error"
               role="alert"
-              className="rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-600"
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700"
             >
               {errorMessage(login.error)}
             </div>
           )}
 
-          <button type="submit" className="auth-btn-submit mt-2" disabled={login.isPending || !canSubmit}>
+          <button type="submit" className="auth-btn-submit mt-2" disabled={login.isPending || !canSubmit} aria-busy={login.isPending || undefined}>
             {login.isPending ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
